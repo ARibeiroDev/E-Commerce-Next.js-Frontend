@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .toggle-btn {
+    @apply [&>div::before]:translate-y-0 [&>div::before]:rotate-45 
+    [&>div::after]:translate-y-0 [&>div::after]:-rotate-45 
+    [&>div]:bg-transparent [&>div]:rotate-720;
+  }
+}
+
+@keyframes appear {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes slide {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-appear {
+  animation: appear 1s ease-in-out;
+}
+
+.animate-slide {
+  animation: slide 0.75s ease-in-out;
+}
