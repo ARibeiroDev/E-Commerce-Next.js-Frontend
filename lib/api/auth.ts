@@ -26,6 +26,14 @@ export const loginUser = (data: LoginDto) => {
   });
 };
 
+export const getMe = () => {
+  return apiFetch<AuthResponseDto["user"]>(`${endpoint}/me`, {
+    method: "GET",
+    credentials: "include",
+    requiresAuth: true,
+  });
+};
+
 export const logoutUser = () => {
   return apiFetch<MessageResponseDto>(`${endpoint}/logout`, {
     method: "POST",

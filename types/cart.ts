@@ -8,6 +8,7 @@ export type CartItem = {
   productVariant: ProductVariant & {
     product: {
       id: string;
+      slug: string;
       title: string;
       basePrice: string;
       images: string[];

@@ -5,7 +5,7 @@ import NavLinks from "@/components/layout/NavLinks";
 import { useEffect, useState } from "react";
 import { ShoppingBagIcon, User, LogOut } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
-import { useCartStore } from "@/stores/cartStore";
+import useCart from "@/hooks/useCart";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
@@ -15,10 +15,10 @@ const Header = () => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  const cart = useCartStore((state) => state.cart);
+  const { items } = useCart();
 
   const totalItems =
-    cart?.items.reduce((total, item) => total + item.quantity, 0) || 0;
+    items.reduce((total, item) => total + item.quantity, 0) || 0;
 
   useEffect(() => {
     const handleResize = () => setOpen(false);

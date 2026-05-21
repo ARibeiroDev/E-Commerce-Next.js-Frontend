@@ -1,6 +1,6 @@
 "use client";
 
-import { useCartStore } from "@/stores/cartStore";
+import useCart from "@/hooks/useCart";
 import { Product } from "@/types/product";
 import { getDiscount } from "@/utils/discountedPrice";
 import Image from "next/image";
@@ -11,6 +11,8 @@ import { toast } from "react-toastify";
 
 const ProductCard = ({ product }: { product: Product }) => {
   const pathName = usePathname();
+
+  const { addToCart } = useCart();
 
   const maxDiscount = product.variants.reduce(
     (max, v) =>
@@ -44,13 +46,26 @@ const ProductCard = ({ product }: { product: Product }) => {
     (v) => v.size === selectedSize && v.color === selectedColor,
   );
 
-  const addToCart = useCartStore((state) => state.addToCart);
+  const handleAddToCart = async () => {
+    if (!selectedVariant) return;
 
-  const handleAddToCart = () => {
-    if (selectedVariant) {
-      addToCart(selectedVariant.sku, 1).then(() => {
-        toast.success(`${product.title} added to cart!`);
-      });
+    const result = await addToCart({
+      sku: selectedVariant.sku,
+      quantity: 1,
+      slug: product.slug,
+      productTitle: product.title,
+      image: product.images[0],
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+      price: Number(selectedVariant.finalPrice),
+      stock: selectedVariant.stock,
+      discountPercentage: selectedVariant.discountPercentage,
+    });
+
+    if (result?.success) {
+      toast.success(`${product.title} added to cart`);
+    } else {
+      toast.error(`Cannot add more than available stock`);
     }
   };
 

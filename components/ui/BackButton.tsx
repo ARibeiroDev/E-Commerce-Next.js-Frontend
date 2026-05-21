@@ -7,7 +7,7 @@ const BackButton = ({ styles }: { styles?: string }) => {
   const router = useRouter();
 
   return (
-    <button onClick={() => router.back()} className={styles}>
+    <button onClick={() => router.push("/shop")} className={styles}>
       <ArrowLeftIcon />
       Go back
     </button>

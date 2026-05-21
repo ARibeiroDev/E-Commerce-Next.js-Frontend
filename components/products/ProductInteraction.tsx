@@ -1,6 +1,6 @@
 "use client";
 
-import { useCartStore } from "@/stores/cartStore";
+import useCart from "@/hooks/useCart";
 import { Product } from "@/types/product";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -22,7 +22,7 @@ const ProductInteraction = ({
     (v) => v.size === selectedSize && v.color === selectedColor,
   );
   const [quantity, setQuantity] = useState(1);
-  const addToCart = useCartStore((state) => state.addToCart);
+  const { addToCart } = useCart();
 
   const maxStock = selectedVariant?.stock || 1;
 
@@ -79,12 +79,46 @@ const ProductInteraction = ({
     }
   };
 
-  const handleAddToCart = () => {
-    if (selectedVariant) {
-      addToCart(selectedVariant.sku, safeQuantity).then(() => {
-        toast.success(`${product.title} added to cart!`);
-      });
+  const handleAddToCart = async () => {
+    if (!selectedVariant) return;
+
+    const result = await addToCart({
+      sku: selectedVariant.sku,
+      quantity,
+      slug: product.slug,
+      productTitle: product.title,
+      image: product.images[0],
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+      price: Number(selectedVariant.finalPrice),
+      stock: selectedVariant.stock,
+      discountPercentage: selectedVariant.discountPercentage,
+    });
+
+    if (result?.success) {
+      toast.success(`${product.title} added to cart!`);
+    } else {
+      toast.error("Cannot add more than available stock.");
     }
+  };
+
+  const handleBuyNow = () => {
+    if (!selectedVariant) return;
+
+    addToCart({
+      sku: selectedVariant.sku,
+      quantity,
+      slug: product.slug,
+      productTitle: product.title,
+      image: product.images[0],
+      color: selectedVariant.color,
+      size: selectedVariant.size,
+      price: Number(selectedVariant.finalPrice),
+      stock: selectedVariant.stock,
+      discountPercentage: selectedVariant.discountPercentage,
+    });
+
+    router.push("/checkout");
   };
 
   return (
@@ -214,15 +248,7 @@ const ProductInteraction = ({
 
         <button
           disabled={isOutOfStock}
-          onClick={() => {
-            console.log("Buy now", {
-              productId: product.id,
-              variantId: selectedVariant?.id,
-              quantity: safeQuantity,
-            });
-
-            router.push("/checkout");
-          }}
+          onClick={handleBuyNow}
           className="w-full py-3 rounded-md bg-orange-500 text-white disabled:opacity-40 cursor-pointer"
         >
           Buy now

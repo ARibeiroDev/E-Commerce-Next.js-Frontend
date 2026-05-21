@@ -3,12 +3,14 @@
 import { useAuthStore } from "@/stores/authStore";
 import { LoginFormInputs, loginFormSchema } from "@/types/loginForm";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 
 const LoginForm = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const login = useAuthStore((state) => state.login);
 
   const {
@@ -30,7 +32,10 @@ const LoginForm = () => {
       await login(data);
 
       setSuccess("Logged in! Redirecting...");
-      router.push("/");
+
+      const redirect = searchParams.get("redirect");
+
+      router.push(redirect || "/");
     } catch (error: unknown) {
       setError("root", {
         message: error instanceof Error ? error.message : "Login Failed.",
