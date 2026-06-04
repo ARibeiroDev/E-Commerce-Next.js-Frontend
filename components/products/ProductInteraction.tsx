@@ -18,47 +18,75 @@ const ProductInteraction = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Global are out of stock
+  const isGlobalOutOfStock =
+    product.variants.length === 0 ||
+    product.variants.every((v) => v.stock === 0);
+
+  // Normalize incoming props to handle unselected route state
+  const sizeFilter = selectedSize || "";
+  const colorFilter = selectedColor || "";
+
   const selectedVariant = product.variants.find(
-    (v) => v.size === selectedSize && v.color === selectedColor,
+    (v) => v.size === sizeFilter && v.color === colorFilter,
   );
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
 
-  const maxStock = selectedVariant?.stock || 1;
+  // Dynamic stock based on selected size and color
+  const maxStock = useMemo(() => {
+    if (selectedVariant) return selectedVariant.stock;
+    const filtered = product.variants.filter(
+      (v) =>
+        (!sizeFilter || v.size === sizeFilter) &&
+        (!colorFilter || v.color === colorFilter),
+    );
+    return filtered.length > 0 ? Math.max(...filtered.map((v) => v.stock)) : 1;
+  }, [selectedVariant, product.variants, sizeFilter, colorFilter]);
 
   const safeQuantity = Math.min(quantity, maxStock);
 
   const colors = Array.from(new Set(product.variants.map((v) => v.color)));
   const sizes = Array.from(new Set(product.variants.map((v) => v.size)));
 
-  const isOutOfStock = !selectedVariant || selectedVariant.stock === 0;
+  const isOutOfStock =
+    sizeFilter && colorFilter
+      ? !selectedVariant || selectedVariant.stock === 0
+      : product.variants.every((v) => v.stock === 0);
 
   // Available sizes for selected color
   const availableSizes = useMemo(() => {
     return product.variants
-      .filter((v) => v.color === selectedColor && v.stock > 0)
+      .filter((v) => (!colorFilter || v.color === colorFilter) && v.stock > 0)
       .map((v) => v.size);
-  }, [product.variants, selectedColor]);
+  }, [product.variants, colorFilter]);
 
   // Available colors for selected size
   const availableColors = useMemo(() => {
     return product.variants
-      .filter((v) => v.size === selectedSize && v.stock > 0)
+      .filter((v) => (!sizeFilter || v.size === sizeFilter) && v.stock > 0)
       .map((v) => v.color);
-  }, [product.variants, selectedSize]);
+  }, [product.variants, sizeFilter]);
 
   const handleTypeChange = (type: "size" | "color", value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    const current = type === "size" ? sizeFilter : colorFilter;
 
-    params.set(type, value);
+    if (current === value) {
+      params.delete(type);
+    } else {
+      params.set(type, value);
+    }
 
-    const nextVariant = product.variants.find((v) => {
-      const nextSize = type === "size" ? value : selectedSize;
+    const nextSize =
+      type === "size" ? (current === value ? "" : value) : sizeFilter;
+    const nextColor =
+      type === "color" ? (current === value ? "" : value) : colorFilter;
 
-      const nextColor = type === "color" ? value : selectedColor;
-
-      return v.size === nextSize && v.color === nextColor;
-    });
+    const nextVariant = product.variants.find(
+      (v) => v.size === nextSize && v.color === nextColor,
+    );
 
     if (nextVariant) {
       setQuantity((prev) => Math.min(prev, nextVariant.stock));
@@ -70,56 +98,105 @@ const ProductInteraction = ({
   };
 
   const handleQuantityChange = (type: "increment" | "decrement") => {
-    if (!selectedVariant) return;
-
     if (type === "increment") {
-      setQuantity((prev) => (prev < selectedVariant.stock ? prev + 1 : prev));
+      setQuantity((prev) => (prev < maxStock ? prev + 1 : prev));
     } else {
       setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
     }
   };
 
+  const getTargetVariant = () => {
+    if (selectedVariant) return selectedVariant;
+
+    // Fallback
+    return (
+      product.variants.find(
+        (v) =>
+          (!sizeFilter || v.size === sizeFilter) &&
+          (!colorFilter || v.color === colorFilter) &&
+          v.stock > 0,
+      ) ||
+      product.variants.find((v) => v.stock > 0) ||
+      product.variants[0]
+    );
+  };
+
   const handleAddToCart = async () => {
-    if (!selectedVariant) return;
+    const variantToUse = getTargetVariant();
+
+    if (!variantToUse || variantToUse.stock === 0) {
+      toast.error("The selected variant is currently out of stock.");
+      return;
+    }
 
     const result = await addToCart({
-      sku: selectedVariant.sku,
+      sku: variantToUse.sku,
       quantity,
       slug: product.slug,
       productTitle: product.title,
       image: product.images[0],
-      color: selectedVariant.color,
-      size: selectedVariant.size,
-      price: Number(selectedVariant.finalPrice),
-      stock: selectedVariant.stock,
-      discountPercentage: selectedVariant.discountPercentage,
+      color: variantToUse.color,
+      size: variantToUse.size,
+      price: Number(variantToUse.finalPrice),
+      stock: variantToUse.stock,
+      discountPercentage: variantToUse.discountPercentage,
     });
 
     if (result?.success) {
-      toast.success(`${product.title} added to cart!`);
+      toast.success(
+        `${product.title} (${variantToUse.size.toUpperCase()} / ${variantToUse.color}) added to cart!`,
+      );
     } else {
       toast.error("Cannot add more than available stock.");
     }
   };
 
   const handleBuyNow = () => {
-    if (!selectedVariant) return;
+    const variantToUse = getTargetVariant();
+    if (!variantToUse) return;
 
     addToCart({
-      sku: selectedVariant.sku,
-      quantity,
+      sku: variantToUse.sku,
+      quantity: safeQuantity,
       slug: product.slug,
       productTitle: product.title,
       image: product.images[0],
-      color: selectedVariant.color,
-      size: selectedVariant.size,
-      price: Number(selectedVariant.finalPrice),
-      stock: selectedVariant.stock,
-      discountPercentage: selectedVariant.discountPercentage,
+      color: variantToUse.color,
+      size: variantToUse.size,
+      price: Number(variantToUse.finalPrice),
+      stock: variantToUse.stock,
+      discountPercentage: variantToUse.discountPercentage,
     });
 
     router.push("/checkout");
   };
+
+  // Early return pattern: If all variants are out of stock
+  if (isGlobalOutOfStock) {
+    return (
+      <section className="flex flex-col gap-6 mt-4">
+        <div className="bg-gray-200 dark:bg-stone-700/50 p-4 rounded-md border border-gray-300 dark:border-stone-600 flex items-center justify-center">
+          <span className="font-medium text-stone-600 dark:text-gray-300">
+            This product is currently out of stock.
+          </span>
+        </div>
+        <div className="flex flex-col gap-3 mt-2">
+          <button
+            disabled
+            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
+          >
+            Add to cart
+          </button>
+          <button
+            disabled
+            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
+          >
+            Buy now
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-6 mt-4">
@@ -130,6 +207,7 @@ const ProductInteraction = ({
         <div className="flex items-center gap-2 flex-wrap">
           {colors.map((color) => {
             const disabled = !availableColors.includes(color);
+            const isSelected = color === colorFilter;
 
             return (
               <button
@@ -139,7 +217,7 @@ const ProductInteraction = ({
                 className={`
                   px-4 py-2 rounded-md border transition-all duration-200
                   ${
-                    color === selectedColor
+                    isSelected
                       ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-black"
                       : "bg-transparent"
                   }
@@ -164,6 +242,7 @@ const ProductInteraction = ({
         <div className="flex items-center gap-2 flex-wrap">
           {sizes.map((size) => {
             const disabled = !availableSizes.includes(size);
+            const isSelected = size === sizeFilter;
 
             return (
               <button
@@ -173,7 +252,7 @@ const ProductInteraction = ({
                 className={`
                   px-4 py-2 rounded-md border transition-all duration-200
                   ${
-                    size === selectedSize
+                    isSelected
                       ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-black"
                       : "bg-transparent"
                   }
@@ -193,9 +272,11 @@ const ProductInteraction = ({
 
       {/* Stock */}
       <p className="text-sm text-stone-500 dark:text-gray-400">
-        {selectedVariant?.stock
+        {selectedVariant
           ? `${selectedVariant.stock} in stock`
-          : "Out of stock"}
+          : sizeFilter || colorFilter
+            ? "Select remaining options to see exact stock"
+            : "Select variant options"}
       </p>
 
       {/* Quantity */}
@@ -211,17 +292,11 @@ const ProductInteraction = ({
           type="text"
           value={safeQuantity}
           min={1}
-          max={selectedVariant?.stock || 1}
+          max={maxStock}
           onChange={(e) => {
-            if (!selectedVariant) return;
-
             let value = Number(e.target.value);
-
             if (isNaN(value)) value = 1;
-
-            value = Math.max(1, value);
-            value = Math.min(value, selectedVariant.stock);
-
+            value = Math.max(1, Math.min(value, maxStock));
             setQuantity(value);
           }}
           className="w-14 h-10 text-center border bg-transparent"
@@ -229,7 +304,7 @@ const ProductInteraction = ({
 
         <button
           onClick={() => handleQuantityChange("increment")}
-          disabled={!selectedVariant || quantity >= selectedVariant.stock}
+          disabled={quantity >= maxStock}
           className="w-10 h-10 rounded-r-md border disabled:opacity-40 cursor-pointer"
         >
           +

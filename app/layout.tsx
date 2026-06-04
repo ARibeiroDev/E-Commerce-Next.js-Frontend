@@ -47,7 +47,7 @@ export default function RootLayout({
           <Header />
           {children}
           <Footer />
-          <ToastContainer position="bottom-right" />
+          <ToastContainer position="bottom-right" autoClose={2000} />
         </AuthProvider>
       </body>
     </html>

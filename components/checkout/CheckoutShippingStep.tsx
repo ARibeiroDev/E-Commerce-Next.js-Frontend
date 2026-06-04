@@ -78,6 +78,11 @@ const CheckoutShippingStep = ({ defaultValues, onSubmit }: Props) => {
             {...register("shippingCity")}
             className="w-full border p-3 rounded-md"
           />
+          {errors.shippingCity && (
+            <p className="text-sm text-red-500 mt-1">
+              {errors.shippingCity.message}
+            </p>
+          )}
         </div>
 
         <div>
@@ -87,6 +92,11 @@ const CheckoutShippingStep = ({ defaultValues, onSubmit }: Props) => {
             {...register("shippingPostalCode")}
             className="w-full border p-3 rounded-md"
           />
+          {errors.shippingPostalCode && (
+            <p className="text-sm text-red-500 mt-1">
+              {errors.shippingPostalCode.message}
+            </p>
+          )}
         </div>
 
         <div>
@@ -96,6 +106,11 @@ const CheckoutShippingStep = ({ defaultValues, onSubmit }: Props) => {
             {...register("shippingCountry")}
             className="w-full border p-3 rounded-md"
           />
+          {errors.shippingCountry && (
+            <p className="text-sm text-red-500 mt-1">
+              {errors.shippingCountry.message}
+            </p>
+          )}
         </div>
       </div>
 

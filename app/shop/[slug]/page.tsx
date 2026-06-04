@@ -35,12 +35,8 @@ const ProductPage = async ({
 
   const product: Product = await getProductBySlug(slug);
 
-  const colors = Array.from(new Set(product.variants.map((v) => v.color)));
-  const sizes = Array.from(new Set(product.variants.map((v) => v.size)));
-
-  // Fallback to first available if not in URL
-  const selectedColor = color || colors[0];
-  const selectedSize = size || sizes[0];
+  const selectedColor = color || "";
+  const selectedSize = size || "";
 
   const selectedVariant = product.variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor,
@@ -49,8 +45,19 @@ const ProductPage = async ({
   // Base product price
   const basePrice = Number(product.basePrice);
 
-  // Variant discount (percentage)
-  const discount = selectedVariant?.discountPercentage ?? 0;
+  // Global max discount for initial selection
+  const maxDiscount = product.variants.reduce(
+    (max, v) =>
+      v.discountPercentage && v.discountPercentage > max
+        ? v.discountPercentage
+        : max,
+    0,
+  );
+
+  // Selected variant discount
+  const discount = selectedVariant
+    ? (selectedVariant.discountPercentage ?? 0)
+    : maxDiscount;
 
   // Calculate final price
   const finalPrice = getDiscount(basePrice, discount);

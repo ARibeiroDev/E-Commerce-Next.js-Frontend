@@ -154,9 +154,9 @@ const CheckoutPage = () => {
 
   return (
     <main className="flex-1 max-w-7xl mx-auto p-6 flex flex-col gap-10">
-      <div className="flex justify-center">
+      <header className="flex justify-center">
         <CheckoutSteps currentStep={step} />
-      </div>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <section className="lg:col-span-2 border rounded-xl p-6">

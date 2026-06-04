@@ -1,4 +1,4 @@
-export type Role = "ADMIN" | "USER";
+export type Role = "SUPERADMIN" | "ADMIN" | "USER";
 
 // Minimal user returned in auth flows (login/register/refresh)
 export type AuthUserDto = {

@@ -1,3 +1,7 @@
+import {
+  CreateProductPayload,
+  ProductVariantPayload,
+} from "@/types/productForm";
 import { apiFetch } from "../api-client";
 import { PaginatedResponse } from "@/types/pagination";
 import { Product } from "@/types/product";
@@ -39,7 +43,10 @@ export const getProducts = cache((params?: ProductQuery) => {
 
 export const getProductBySlug = (slug: string) => {
   return apiFetch<Product>(`${endpoint}/${slug}`, {
-    next: { revalidate: 300 },
+    next: {
+      tags: [`product-:${slug}`], // Unique tag for this specific product
+      revalidate: 60,
+    },
   });
 };
 
@@ -47,7 +54,7 @@ export const getProductsByCategory = (categoryId: string) => {
   return apiFetch<Product[]>(`${endpoint}?categoryId=${categoryId}`);
 };
 
-export const createProduct = (product: Omit<Product, "id">) => {
+export const createProduct = (product: CreateProductPayload) => {
   return apiFetch<Product>(endpoint, {
     method: "POST",
     body: JSON.stringify(product),
@@ -55,7 +62,10 @@ export const createProduct = (product: Omit<Product, "id">) => {
   });
 };
 
-export const updateProduct = (slug: string, product: Partial<Product>) => {
+export const updateProduct = (
+  slug: string,
+  product: Partial<CreateProductPayload>,
+) => {
   return apiFetch<Product>(`${endpoint}/${slug}`, {
     method: "PATCH",
     body: JSON.stringify(product),
@@ -65,6 +75,36 @@ export const updateProduct = (slug: string, product: Partial<Product>) => {
 
 export const deleteProduct = (slug: string) => {
   return apiFetch<void>(`${endpoint}/${slug}`, {
+    method: "DELETE",
+    requiresAuth: true,
+  });
+};
+
+export const addProductVariant = (
+  slug: string,
+  variant: ProductVariantPayload,
+) => {
+  return apiFetch(`${endpoint}/${slug}/variants`, {
+    method: "POST",
+    body: JSON.stringify(variant),
+    requiresAuth: true,
+  });
+};
+
+export const updateProductVariant = (
+  slug: string,
+  sku: string,
+  variant: ProductVariantPayload,
+) => {
+  return apiFetch(`${endpoint}/${slug}/variants/${sku}`, {
+    method: "PATCH",
+    body: JSON.stringify(variant),
+    requiresAuth: true,
+  });
+};
+
+export const deleteProductVariant = (slug: string, sku: string) => {
+  return apiFetch(`${endpoint}/${slug}/variants/${sku}`, {
     method: "DELETE",
     requiresAuth: true,
   });

@@ -12,7 +12,7 @@ const slides = [
     title: "Summer Sale Collections",
     description: "Sale! Up to 50% off!",
     img: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg?auto=compress&cs=tinysrgb&w=800",
-    tag: "jackets",
+    tag: "summer",
     bg: "bg-gradient-to-r from-yellow-100 to-pink-100",
   },
   {
@@ -46,7 +46,7 @@ const Slider = () => {
   };
 
   useEffect(() => {
-    const timeout = setTimeout(nextSlide, 5000);
+    const timeout = setTimeout(nextSlide, 10000);
     return () => clearTimeout(timeout);
   }, [current]);
 

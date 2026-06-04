@@ -8,7 +8,7 @@ const CheckoutReviewStep = () => {
   const { items } = useCart();
 
   return (
-    <div className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       {items.map((item) => (
         <div
           key={item.sku}
@@ -24,7 +24,7 @@ const CheckoutReviewStep = () => {
             />
           </Link>
 
-          <div className="flex-1 flex flex-col gap-2">
+          <section className="flex-1 flex flex-col gap-2">
             <h3 className="font-semibold text-lg">{item.title}</h3>
 
             <p className="text-sm text-gray-500">Size: {item.size}</p>
@@ -38,10 +38,10 @@ const CheckoutReviewStep = () => {
                 ${(item.finalPrice * item.quantity).toFixed(2)}
               </p>
             </div>
-          </div>
+          </section>
         </div>
       ))}
-    </div>
+    </section>
   );
 };
 

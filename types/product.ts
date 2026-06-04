@@ -1,7 +1,4 @@
-export type Category = {
-  id: string;
-  name: string;
-};
+import { Category } from "@/lib/api/categories";
 
 export type ProductVariant = {
   id: string;

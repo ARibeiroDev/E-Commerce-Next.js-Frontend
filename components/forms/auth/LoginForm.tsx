@@ -29,13 +29,28 @@ const LoginForm = () => {
     setSuccess(null);
     clearErrors();
     try {
-      await login(data);
+      const user = await login(data);
 
       setSuccess("Logged in! Redirecting...");
 
-      const redirect = searchParams.get("redirect");
+      const redirectParam = searchParams.get("redirect");
 
-      router.push(redirect || "/");
+      if (user.role === "ADMIN" || user.role === "SUPERADMIN") {
+        // If admin was heading to a deep admin link, preserve it, otherwise send to default admin route
+        if (redirectParam && redirectParam.startsWith("/admin")) {
+          router.push(redirectParam);
+        } else {
+          router.push("/admin");
+        }
+      } else {
+        // Standard user router with a security baseline check
+        // Prevent normal uses from being sent to admin routes if manipulated via query
+        if (redirectParam && !redirectParam.startsWith("/admin")) {
+          router.push(redirectParam);
+        } else {
+          router.push("/");
+        }
+      }
     } catch (error: unknown) {
       setError("root", {
         message: error instanceof Error ? error.message : "Login Failed.",
@@ -45,7 +60,7 @@ const LoginForm = () => {
 
   return (
     <form
-      className="flex flex-col gap-2 w-full md:w-1/2 max-w-lg px-6 py-4 rounded-xl bg-gray-200 dark:bg-stone-800"
+      className="flex flex-col gap-4 w-full md:w-1/2 max-w-lg bg-gray-100 dark:bg-stone-800 p-6 rounded-xl"
       onSubmit={handleSubmit(handleLoginForm)}
     >
       <label htmlFor="identifier" className="text-sm mt-2">
@@ -69,7 +84,7 @@ const LoginForm = () => {
         required
         type="password"
         id="password"
-        placeholder="John Doe"
+        placeholder="**********"
         className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400"
         {...register("password")}
       />

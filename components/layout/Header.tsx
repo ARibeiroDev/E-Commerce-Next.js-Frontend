@@ -3,17 +3,16 @@
 import Link from "next/link";
 import NavLinks from "@/components/layout/NavLinks";
 import { useEffect, useState } from "react";
-import { ShoppingBagIcon, User, LogOut } from "lucide-react";
+import { ShoppingBagIcon, User, LogOut, WrenchIcon } from "lucide-react";
 import { useAuthStore } from "@/stores/authStore";
 import useCart from "@/hooks/useCart";
 
 const Header = () => {
   const [open, setOpen] = useState(false);
 
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isLoading = useAuthStore((state) => state.isLoading);
+  const { user, logout, isAuthenticated, isLoading } = useAuthStore(
+    (state) => state,
+  );
 
   const { items } = useCart();
 
@@ -28,7 +27,7 @@ const Header = () => {
   }, []);
 
   return (
-    <header className="animate-slide shadow-xs z-10 flex justify-between items-center px-[5vw] lg:px-[7vw] min-h-18 relative">
+    <header className="animate-slide shadow-xs dark:shadow-stone-800 z-10 flex justify-between items-center px-[5vw] lg:px-[7vw] min-h-18 relative">
       {/* Mobile menu */}
       <button
         className={`w-12 h-12 md:hidden cursor-pointer relative flex justify-center items-center ${open ? "toggle-btn" : ""}`}
@@ -40,7 +39,9 @@ const Header = () => {
       </button>
 
       <NavLinks
-        className={`flex md:hidden flex-col items-center justify-evenly uppercase absolute top-18 left-0 transition-all duration-500 ${open ? "translate-x-0" : "-translate-x-[200%]"} w-full h-[calc(100vh-4.5rem)] bg-gray-200/90 dark:bg-stone-900/95`}
+        onNavigate={() => setOpen(false)} // Closes the mobile menu upon click
+        className={`z-10 flex md:hidden flex-col items-center justify-evenly uppercase absolute top-18 left-0 transition-all duration-500 ${open ? "translate-x-0" : "-translate-x-[200%]"} w-full h-[calc(100vh-4.5rem)] bg-gray-200/90 dark:bg-stone-900/95`}
+        mobile
       />
 
       {/* Logo */}
@@ -63,7 +64,13 @@ const Header = () => {
           <p className="w-24 h-5 bg-gray-200 dark:bg-stone-800 rounded animate-pulse"></p>
         ) : isAuthenticated && user ? (
           <>
-            <p>Hi, {user?.username}</p>
+            <p>Hi, {user?.username}</p> {/* TODO: Add profile link */}
+            {isAuthenticated &&
+              (user.role === "ADMIN" || user.role === "SUPERADMIN") && (
+                <Link href="/admin" title="Admin Console">
+                  <WrenchIcon />
+                </Link>
+              )}
             <LogOut
               onClick={logout}
               className="cursor-pointer"
@@ -71,12 +78,12 @@ const Header = () => {
             />
           </>
         ) : (
-          <Link href="/login">
+          <Link href="/login" title="Login">
             <User />
           </Link>
         )}
 
-        <Link href="/cart" className="relative">
+        <Link href="/cart" className="relative" title="Cart">
           {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 bg-black dark:bg-red-600 text-white rounded-full p-1 min-w-4 min-h-4 flex items-center justify-center aspect-square text-xs">
               {totalItems}

@@ -6,6 +6,7 @@ import OrderExpirationTimer from "@/components/checkout/OrderExpirationTimer";
 import { useState } from "react";
 import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useRouter } from "next/navigation";
+import { useCartStore } from "@/stores/cartStore";
 
 type Props = {
   order: Order;
@@ -19,6 +20,8 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
 
   const resetCheckout = useCheckoutStore((state) => state.resetCheckout);
 
+  const resetCart = useCartStore((state) => state.resetCart);
+
   const handleFakePayment = async () => {
     if (loading || isExpired) return;
 
@@ -26,6 +29,8 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
 
     try {
       await confirmOrder(order.id, crypto.randomUUID());
+
+      resetCart();
 
       resetCheckout();
 
@@ -38,7 +43,7 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <section className="flex flex-col gap-6">
       {order.expiresAt && (
         <OrderExpirationTimer expiresAt={order.expiresAt} onExpire={onExpire} />
       )}
@@ -78,7 +83,7 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
       >
         {loading ? "Processing..." : "Simulate Payment"}
       </button>
-    </div>
+    </section>
   );
 };
 

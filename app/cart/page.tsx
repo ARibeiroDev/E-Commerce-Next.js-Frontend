@@ -36,7 +36,7 @@ const CartPage = () => {
                   className="object-cover rounded aspect-square self-center"
                 />
               </Link>
-              <div className="flex-1 flex flex-col gap-1">
+              <section className="flex-1 flex flex-col gap-1">
                 <h3 className="text-lg font-semibold">{item.title}</h3>
 
                 <p>
@@ -49,9 +49,9 @@ const CartPage = () => {
                 </p>
                 <p className="text-sm">Size: {item.size}</p>
                 <p className="text-sm">Color: {item.color}</p>
-              </div>
+              </section>
 
-              <div className="w-full sm:w-auto flex justify-between gap-4 mt-3 sm:mt-0">
+              <section className="w-full sm:w-auto flex justify-between gap-4 mt-3 sm:mt-0">
                 <div className="flex items-center">
                   <button
                     onClick={() => updateCartItem(item.sku, item.quantity - 1)}
@@ -78,26 +78,26 @@ const CartPage = () => {
                 >
                   <Trash />
                 </button>
-              </div>
+              </section>
             </li>
           );
         })}
       </ul>
 
-      <section className="mt-6 flex justify-between items-center">
+      <section className="mt-6 flex flex-col gap-4 sm:flex-row sm:gap-0 justify-between items-start sm:items-center">
         <span className="text-xl font-semibold">
           Total: ${totalPrice.toFixed(2)}
         </span>
         <button
           onClick={clearCart}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 w-full sm:w-auto"
         >
           Clear Cart
         </button>
 
         <Link
           href="/checkout"
-          className="px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:opacity-90 transition"
+          className="px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:opacity-90 transition w-full sm:w-auto"
         >
           Proceed to Checkout
         </Link>

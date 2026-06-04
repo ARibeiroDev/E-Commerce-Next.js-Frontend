@@ -9,7 +9,7 @@ type AuthState = {
   isAuthenticated: boolean;
   isLoading: boolean;
 
-  login: (data: LoginDto) => Promise<void>;
+  login: (data: LoginDto) => Promise<AuthUserDto>;
   logout: () => Promise<void>;
   initAuth: () => Promise<void>;
 };
@@ -28,6 +28,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       accessToken: res.accessToken,
       isAuthenticated: true,
     });
+
+    return res.user;
   },
 
   logout: async () => {
