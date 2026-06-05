@@ -1,7 +1,7 @@
 import {
   CreateProductPayload,
   ProductVariantPayload,
-} from "@/types/productForm";
+} from "@/types/validations/productForm";
 import { apiFetch } from "../api-client";
 import { PaginatedResponse } from "@/types/pagination";
 import { Product } from "@/types/product";

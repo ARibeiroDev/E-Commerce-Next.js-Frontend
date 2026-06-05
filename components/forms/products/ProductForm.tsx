@@ -15,7 +15,7 @@ import {
 import {
   UpdateProductFormInputs,
   updateProductSchema,
-} from "@/types/productForm";
+} from "@/types/validations/productForm";
 import { Product } from "@/types/product";
 import { revalidateProduct } from "@/utils/revalidateCache";
 

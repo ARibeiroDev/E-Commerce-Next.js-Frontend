@@ -1,6 +1,9 @@
 "use client";
 
-import { ShippingFormInputs, shippingFormSchema } from "@/types/shippingForm";
+import {
+  ShippingFormInputs,
+  shippingFormSchema,
+} from "@/types/validations/shippingForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 

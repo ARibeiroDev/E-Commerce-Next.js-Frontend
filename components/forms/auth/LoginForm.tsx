@@ -1,7 +1,10 @@
 "use client";
 
 import { useAuthStore } from "@/stores/authStore";
-import { LoginFormInputs, loginFormSchema } from "@/types/loginForm";
+import {
+  LoginFormInputs,
+  loginFormSchema,
+} from "@/types/validations/loginForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -60,7 +63,7 @@ const LoginForm = () => {
 
   return (
     <form
-      className="flex flex-col gap-4 w-full md:w-1/2 max-w-lg bg-gray-100 dark:bg-stone-800 p-6 rounded-xl"
+      className="flex flex-col gap-4 w-full md:w-1/2 max-w-lg bg-gray-200 dark:bg-stone-800 p-6 rounded-xl"
       onSubmit={handleSubmit(handleLoginForm)}
     >
       <label htmlFor="identifier" className="text-sm mt-2">

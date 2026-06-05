@@ -14,7 +14,7 @@ import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useAuthStore } from "@/stores/authStore";
 
 import { createOrder, getOrderById, cancelOrder } from "@/lib/api/orders";
-import { ShippingFormInputs } from "@/types/shippingForm";
+import { ShippingFormInputs } from "@/types/validations/shippingForm";
 
 const CheckoutPage = () => {
   const router = useRouter();

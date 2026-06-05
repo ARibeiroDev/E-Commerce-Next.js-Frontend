@@ -1,7 +1,10 @@
 "use client";
 
 import { registerUser } from "@/lib/api/auth";
-import { RegisterFormInputs, registerFormSchema } from "@/types/registerForm";
+import {
+  RegisterFormInputs,
+  registerFormSchema,
+} from "@/types/validations/registerForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
