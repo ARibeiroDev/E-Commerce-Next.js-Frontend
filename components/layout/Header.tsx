@@ -64,7 +64,12 @@ const Header = () => {
           <p className="w-24 h-5 bg-gray-200 dark:bg-stone-800 rounded animate-pulse"></p>
         ) : isAuthenticated && user ? (
           <>
-            <p>Hi, {user?.username}</p> {/* TODO: Add profile link */}
+            <p>
+              Hi,{" "}
+              <Link href="/profile" className="border-b" title="Profile">
+                {user?.username}
+              </Link>{" "}
+            </p>
             {isAuthenticated &&
               (user.role === "ADMIN" || user.role === "SUPERADMIN") && (
                 <Link href="/admin" title="Admin Console">

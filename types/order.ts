@@ -18,6 +18,7 @@ export type CreateOrderPayload = {
 };
 
 export type OrderItem = {
+  id?: string;
   productName: string;
   variantSku: string;
   size: string;
@@ -33,4 +34,10 @@ export type Order = {
   items: OrderItem[];
   expiresAt?: string;
   createdAt: string;
+  shippingName: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingPostalCode: string;
+  shippingCountry: string;
 };

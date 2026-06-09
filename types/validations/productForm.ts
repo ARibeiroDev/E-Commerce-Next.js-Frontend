@@ -4,7 +4,6 @@ export const productVariantSchema = z.object({
   color: z.string().min(1, "Color is required"),
   size: z.string().min(1, "Size is required"),
   stock: z.number().int().min(0, "Stock must be at least 0"),
-  // Removed .optional().default(0)
   discountPercentage: z
     .number()
     .min(0, "Cannot be less than 0")
@@ -17,7 +16,7 @@ export const createProductSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   basePrice: z.number().positive("Price must be greater than 0"),
   featured: z.boolean(),
-  tags: z.string().optional(), // This is fine because it doesn't use .default()
+  tags: z.string().optional(),
   images: z.string().min(1, "At least one image URL is required"),
   variants: z
     .array(productVariantSchema)
