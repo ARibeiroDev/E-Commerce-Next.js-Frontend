@@ -21,6 +21,9 @@ const buildQuery = (params?: ProductQuery) => {
   if (params.title) search.set("title", params.title);
   if (params.featured !== undefined)
     search.set("featured", params.featured.toString());
+  if (params.isArchived !== undefined) {
+    search.set("isArchived", params.isArchived.toString());
+  }
 
   if (params.tags?.length) {
     params.tags.forEach((tag) => search.append("tags[]", tag.toLowerCase()));
@@ -37,7 +40,10 @@ export const getProducts = cache((params?: ProductQuery) => {
   const query = buildQuery(params);
 
   return apiFetch<PaginatedResponse<Product[]>>(`${endpoint}${query}`, {
-    next: { revalidate: 60 }, // Cache for 60s
+    next: {
+      tags: ["products"],
+      revalidate: 60,
+    }, // Cache for 60s
   });
 });
 

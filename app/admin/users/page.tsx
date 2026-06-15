@@ -119,7 +119,7 @@ export default function AdminUsersPage() {
     <>
       <header className="flex flex-col gap-4 mt-4 mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-xl sm:text-2xl font-bold">User Management</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold">User Management</h2>
           <button
             onClick={fetchUsers}
             className="text-sm px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800 transition-colors w-fit"

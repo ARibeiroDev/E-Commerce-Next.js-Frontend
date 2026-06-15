@@ -24,6 +24,9 @@ const ProductInteraction = ({
     product.variants.length === 0 ||
     product.variants.every((v) => v.stock === 0);
 
+  // Check if product is archived
+  const isArchived = product.isArchived;
+
   // Normalize incoming props to handle unselected route state
   const sizeFilter = selectedSize || "";
   const colorFilter = selectedColor || "";
@@ -70,6 +73,8 @@ const ProductInteraction = ({
   }, [product.variants, sizeFilter]);
 
   const handleTypeChange = (type: "size" | "color", value: string) => {
+    if (isArchived) return; // Defensive guard
+
     const params = new URLSearchParams(searchParams.toString());
     const current = type === "size" ? sizeFilter : colorFilter;
 
@@ -98,6 +103,7 @@ const ProductInteraction = ({
   };
 
   const handleQuantityChange = (type: "increment" | "decrement") => {
+    if (isArchived) return;
     if (type === "increment") {
       setQuantity((prev) => (prev < maxStock ? prev + 1 : prev));
     } else {
@@ -122,6 +128,11 @@ const ProductInteraction = ({
   };
 
   const handleAddToCart = async () => {
+    if (isArchived) {
+      toast.error("This product is archived and cannot be added to the cart.");
+      return;
+    }
+
     const variantToUse = getTargetVariant();
 
     if (!variantToUse || variantToUse.stock === 0) {
@@ -152,6 +163,11 @@ const ProductInteraction = ({
   };
 
   const handleBuyNow = () => {
+    if (isArchived) {
+      toast.error("This product is archived and cannot be purchased.");
+      return;
+    }
+
     const variantToUse = getTargetVariant();
     if (!variantToUse) return;
 
@@ -171,13 +187,39 @@ const ProductInteraction = ({
     router.push("/checkout");
   };
 
-  // Early return pattern: If all variants are out of stock
+  // Early return pattern: If all variants are out of stock or archived
+  if (isArchived) {
+    return (
+      <section className="flex flex-col gap-6 mt-4">
+        <div className="bg-gray-200 dark:bg-stone-700/50 p-4 rounded-md border border-gray-300 dark:border-stone-600 flex items-center justify-center">
+          <span className="font-medium text-stone-600 dark:text-gray-300">
+            This product is currently archived
+          </span>
+        </div>
+        <div className="flex flex-col gap-3 mt-2">
+          <button
+            disabled
+            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
+          >
+            Add to cart
+          </button>
+          <button
+            disabled
+            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
+          >
+            Buy now
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   if (isGlobalOutOfStock) {
     return (
       <section className="flex flex-col gap-6 mt-4">
         <div className="bg-gray-200 dark:bg-stone-700/50 p-4 rounded-md border border-gray-300 dark:border-stone-600 flex items-center justify-center">
           <span className="font-medium text-stone-600 dark:text-gray-300">
-            This product is currently out of stock.
+            This product is currently out of stock
           </span>
         </div>
         <div className="flex flex-col gap-3 mt-2">

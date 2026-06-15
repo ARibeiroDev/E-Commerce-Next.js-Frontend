@@ -27,14 +27,6 @@ export const loginUser = (data: LoginDto) => {
   });
 };
 
-export const getMe = () => {
-  return apiFetch<AuthResponseDto["user"]>(`${endpoint}/me`, {
-    method: "GET",
-    credentials: "include",
-    requiresAuth: true,
-  });
-};
-
 export const getUserById = (id: string) => {
   return apiFetch<PrivateUserDto>(`${endpoint}/${id}`, {
     method: "GET",

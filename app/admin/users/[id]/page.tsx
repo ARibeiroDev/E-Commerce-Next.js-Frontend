@@ -25,8 +25,7 @@ export default function AdminEditUserPage() {
       try {
         const user = await getUserById(id);
 
-        if (!user)
-          throw new Error("The requested user record could not be found.");
+        if (!user) throw new Error("The requested user could not be found.");
 
         setTargetUser(user);
       } catch (err: unknown) {
@@ -57,18 +56,18 @@ export default function AdminEditUserPage() {
   }
 
   return (
-    <div className="w-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 text-stone-900 dark:text-gray-100">
-      <section className="mb-6">
+    <>
+      <section className="py-2 border-b border-gray-200 dark:border-stone-800">
         <Link
           href="/admin/users"
-          className="inline-flex items-center gap-2 text-sm text-stone-600 hover:text-stone-500 transition-colors group"
+          className="inline-flex items-center gap-2 text-sm hover:text-stone-500 transition-colors group"
         >
           <ArrowLeftIcon size={20} />
           Back to User Directory
         </Link>
       </section>
 
-      <header className="mb-8">
+      <header className="mb-4">
         <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Modify User Settings
         </h3>
@@ -134,6 +133,6 @@ export default function AdminEditUserPage() {
           </section>
         </div>
       )}
-    </div>
+    </>
   );
 }

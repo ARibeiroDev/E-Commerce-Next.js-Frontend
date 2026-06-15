@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import type { AuditLog } from "@/lib/api/auditLog";
+import { X } from "lucide-react";
 
 type AuditLogModalProps = {
   log: AuditLog;
@@ -55,22 +56,10 @@ const AuditLogModal = ({ log, onClose }: AuditLogModalProps) => {
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-200 dark:hover:bg-stone-800 rounded-full transition-colors text-stone-500"
+            className="p-2 hover:bg-gray-200 dark:hover:bg-stone-800 rounded-full transition-colors text-stone-500 cursor-pointer"
             aria-label="Close dialog"
           >
-            <svg
-              className="w-5 h-5 cursor-pointer"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-5 h-5" />
           </button>
         </header>
 

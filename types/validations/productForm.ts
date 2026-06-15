@@ -31,6 +31,7 @@ export type CreateProductPayload = {
   categoryId: string;
   basePrice: number;
   featured: boolean;
+  isArchived: boolean;
   tags: string[];
   images: string[];
   variants: {
@@ -65,6 +66,7 @@ export const updateProductSchema = z.object({
   categoryId: z.string().min(1, "Category is required"),
   basePrice: z.number().positive("Price must be greater than 0"),
   featured: z.boolean(),
+  isArchived: z.boolean(),
   tags: z.string().optional(),
   images: z.string().min(1, "At least one image URL is required"),
   variants: z

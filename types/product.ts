@@ -23,6 +23,7 @@ export type Product = {
   basePrice: string;
   tags: string[];
   featured: boolean;
+  isArchived: boolean;
   createdAt: string;
   updatedAt: string;
   variants: ProductVariant[];

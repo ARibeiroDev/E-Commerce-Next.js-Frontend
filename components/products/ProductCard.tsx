@@ -18,6 +18,9 @@ const ProductCard = ({ product }: { product: Product }) => {
     product.variants.length === 0 ||
     product.variants.every((v) => v.stock === 0);
 
+  // Check if product is archived
+  const isArchived = product.isArchived;
+
   const maxDiscount = product.variants.reduce(
     (max, v) =>
       v.discountPercentage && v.discountPercentage > max
@@ -222,15 +225,15 @@ const ProductCard = ({ product }: { product: Product }) => {
       )}
 
       <button
-        disabled={isGlobalOutOfStock}
+        disabled={isGlobalOutOfStock || isArchived}
         className={`mt-4 self-end rounded-lg py-2 px-6 transition-all duration-200 ease-in-out ${
-          isGlobalOutOfStock
+          isGlobalOutOfStock || isArchived
             ? "bg-gray-300 dark:bg-stone-700 text-stone-400 dark:text-stone-500 cursor-not-allowed"
             : "bg-gray-300 dark:bg-stone-700 hover:bg-stone-900 hover:text-gray-300 text-stone-700 dark:text-gray-300 cursor-pointer"
         }`}
         onClick={handleAddToCart}
       >
-        {isGlobalOutOfStock ? "Out of stock" : "Add to cart"}
+        {isGlobalOutOfStock || isArchived ? "Out of stock" : "Add to cart"}
       </button>
     </div>
   );

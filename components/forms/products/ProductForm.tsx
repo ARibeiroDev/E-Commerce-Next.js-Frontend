@@ -17,7 +17,7 @@ import {
   updateProductSchema,
 } from "@/types/validations/productForm";
 import { Product } from "@/types/product";
-import { revalidateProduct } from "@/utils/revalidateCache";
+import { revalidateProduct, revalidateProducts } from "@/utils/revalidateCache";
 
 interface ProductFormProps {
   initialData?: Product; // If provided, form is in Edit Mode
@@ -49,6 +49,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           categoryId: initialData.categoryId,
           basePrice: Number(initialData.basePrice),
           featured: initialData.featured,
+          isArchived: initialData.isArchived,
           tags: initialData.tags?.join(", ") || "",
           images: initialData.images?.join(", ") || "",
           variants: initialData.variants.map((v) => ({
@@ -61,6 +62,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         }
       : {
           featured: false,
+          isArchived: false,
           variants: [{ color: "", size: "", stock: 0, discountPercentage: 0 }],
         },
   });
@@ -106,6 +108,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         categoryId: data.categoryId,
         basePrice: data.basePrice,
         featured: data.featured,
+        isArchived: data.isArchived,
         tags: data.tags
           ? data.tags
               .split(",")
@@ -154,6 +157,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         // Create mode logic
         const createPayload = { ...basePayload, variants: data.variants };
         await createProduct(createPayload);
+        await revalidateProducts();
         setSuccess("Product successfully created!");
         reset();
       }
@@ -175,19 +179,23 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       onSubmit={handleSubmit(onSubmit)}
     >
       {/* Basic Info Section */}
-      <section className="space-y-4">
-        <div className="flex justify-between items-center">
+      <fieldset className="space-y-4">
+        <legend className="flex justify-between w-full items-center">
           <h4 className="text-lg font-semibold">Basic Information</h4>
           {isEditing && (
             <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
               Edit Mode
             </span>
           )}
-        </div>
+        </legend>
 
         <div>
-          <label className="text-sm font-medium">Title</label>
+          <label className="text-sm font-medium" htmlFor="title">
+            Title
+          </label>
           <input
+            type="text"
+            id="title"
             {...register("title")}
             placeholder="Product Title"
             className={inputStyles}
@@ -198,8 +206,11 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Description</label>
+          <label className="text-sm font-medium" htmlFor="description">
+            Description
+          </label>
           <textarea
+            id="description"
             {...register("description")}
             rows={4}
             className={inputStyles}
@@ -211,8 +222,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium">Category</label>
-            <select {...register("categoryId")} className={inputStyles}>
+            <label className="text-sm font-medium" htmlFor="category">
+              Category
+            </label>
+            <select
+              {...register("categoryId")}
+              className={inputStyles}
+              id="category"
+            >
               <option value="">--Select a Category--</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -228,8 +245,11 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Base Price (€)</label>
+            <label className="text-sm font-medium" htmlFor="basePrice">
+              Base Price (€)
+            </label>
             <input
+              id="basePrice"
               type="number"
               step="0.01"
               {...register("basePrice", { valueAsNumber: true })}
@@ -253,39 +273,64 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           {errors.featured && (
             <p className="text-sm text-red-500">{errors.featured.message}</p>
           )}
+          <div className="flex flex-col justify-center">
+            <label className="flex items-center space-x-3 cursor-pointer my-2">
+              <input
+                type="checkbox"
+                {...register("isArchived")}
+                className="w-5 h-5 rounded border-gray-300 text-blue-600"
+              />
+              <span className="text-sm font-medium">Archive this product</span>
+            </label>
+          </div>
+          {errors.isArchived && (
+            <p className="text-sm text-red-500">{errors.isArchived.message}</p>
+          )}
         </div>
 
         <div>
-          <label className="text-sm font-medium">Tags (comma separated)</label>
-          <input {...register("tags")} className={inputStyles} />
+          <label className="text-sm font-medium" htmlFor="tags">
+            Tags (comma separated)
+          </label>
+          <input
+            {...register("tags")}
+            className={inputStyles}
+            id="tags"
+            type="text"
+          />
           {errors.tags && (
             <p className="text-sm text-red-500">{errors.tags.message}</p>
           )}
         </div>
 
         <div>
-          <label className="text-sm font-medium">
+          <label className="text-sm font-medium" htmlFor="images">
             Images (comma separated URLs)
           </label>
-          <input {...register("images")} className={inputStyles} />
+          <input
+            {...register("images")}
+            className={inputStyles}
+            id="images"
+            type="text"
+          />
           {errors.images && (
             <p className="text-sm text-red-500">{errors.images.message}</p>
           )}
         </div>
-      </section>
+      </fieldset>
 
       <hr className="border-gray-300 dark:border-stone-600 my-2" />
 
       {/* Variants Section */}
-      <section className="space-y-4">
+      <fieldset className="space-y-4">
         <div className="flex justify-between items-center">
-          <h4 className="text-lg font-semibold">Variants</h4>
+          <legend className="text-lg font-semibold">Variants</legend>
           <button
             type="button"
             onClick={() =>
               append({ color: "", size: "", stock: 0, discountPercentage: 0 })
             }
-            className="text-sm bg-gray-200 hover:bg-gray-300 dark:bg-stone-700 px-3 py-1 rounded transition-colors"
+            className="text-sm bg-gray-200 hover:bg-gray-400 dark:bg-stone-700 px-3 py-1 rounded transition-colors cursor-pointer"
           >
             + Add Variant
           </button>
@@ -311,7 +356,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                 <button
                   type="button"
                   onClick={() => handleRemoveVariant(index)}
-                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                  className="text-red-600 hover:text-red-800 text-sm font-medium cursor-pointer"
                 >
                   Remove
                 </button>
@@ -321,6 +366,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <input
+                  type="text"
                   {...register(`variants.${index}.color`)}
                   placeholder="Color"
                   className={inputStyles}
@@ -333,6 +379,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               </div>
               <div>
                 <input
+                  type="text"
                   {...register(`variants.${index}.size`)}
                   placeholder="Size"
                   className={inputStyles}
@@ -376,7 +423,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             </div>
           </div>
         ))}
-      </section>
+      </fieldset>
 
       {/* Status & Submit */}
       {errors.root && (
@@ -393,7 +440,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
       <button
         type="submit"
         disabled={isSubmitting || success !== null}
-        className="mt-4 w-full md:w-auto md:self-end px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        className="mt-4 w-full md:w-auto md:self-end px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white cursor-pointer rounded-md transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
       >
         {isSubmitting
           ? "Processing..."

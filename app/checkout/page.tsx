@@ -13,8 +13,16 @@ import CheckoutPaymentStep from "@/components/checkout/CheckoutPaymentStep";
 import { useCheckoutStore } from "@/stores/checkoutStore";
 import { useAuthStore } from "@/stores/authStore";
 
-import { createOrder, getOrderById, cancelOrder } from "@/lib/api/orders";
+import {
+  createOrder,
+  getOrderById,
+  cancelOrder,
+  getMyOrders,
+} from "@/lib/api/orders";
 import { ShippingFormInputs } from "@/types/validations/shippingForm";
+
+const SHIPPING_THRESHOLD = 100;
+const SHIPPING_FEE = 15;
 
 const CheckoutPage = () => {
   const router = useRouter();
@@ -25,6 +33,7 @@ const CheckoutPage = () => {
 
   const {
     step,
+    setStep, // Pulled in to enforce state sync
     shippingData,
     setShippingData,
     pendingOrder,
@@ -34,9 +43,10 @@ const CheckoutPage = () => {
     resetCheckout,
     confirmReview,
     confirmShipping,
+    resumePendingCheckout,
   } = useCheckoutStore();
 
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { user, isAuthenticated, isLoading } = useAuthStore();
   const hasHydrated = useCheckoutStore((state) => state.hasHydrated);
 
   // Auth guard
@@ -47,50 +57,88 @@ const CheckoutPage = () => {
   }, [isAuthenticated, isLoading, router]);
 
   // Order validation guard
-  useEffect(
-    () => {
-      if (isLoading || !isAuthenticated || !pendingOrder) return;
+  useEffect(() => {
+    if (isLoading || !isAuthenticated || !user) return;
 
-      const validateOrder = async () => {
-        try {
-          const freshOrder = await getOrderById(pendingOrder.id);
+    const validateOrder = async () => {
+      try {
+        // Storage integrity check: If token expired without manual logout
+        // localStorage might still hold the previous user's checkout data, wipe it
+        if (pendingOrder && pendingOrder.userId !== user.id) {
+          console.warn(
+            "Order user mismatch detected. Resetting checkout state.",
+          );
+          resetCheckout();
+          return;
+        }
 
-          const isExpired =
-            freshOrder.expiresAt && new Date(freshOrder.expiresAt) < new Date();
+        // If user returned after logging out, reset their checkout data
+        if (!pendingOrder) {
+          const res = await getMyOrders({
+            limit: 1,
+            sortBy: "createdAt",
+            orderBy: "desc",
+          });
+          const latestOrder = res.data[0];
 
-          const isInvalid = freshOrder.status !== "PENDING";
+          if (latestOrder && latestOrder.status === "PENDING") {
+            const isExpired =
+              latestOrder.expiresAt &&
+              new Date(latestOrder.expiresAt) < new Date();
 
-          if (isExpired || isInvalid) {
-            // Lock the UI instead of deteleting the cart
-            setIsOrderExpired(true);
-          } else {
-            // Sync frontend state with fresh backend data
-            setPendingOrder(freshOrder);
+            // Rehydrate the store
+            if (!isExpired) {
+              resumePendingCheckout(latestOrder);
+            }
           }
-        } catch (error) {
-          if (error instanceof Error && error.message.includes("not found")) {
-            console.warn("Order no longer exists, resetting checkout.");
-            resetCheckout();
-          } else {
-            console.error(
-              "Order validation failed due to network/server error:",
-              error,
-            );
+          return; // The state update will trigger a re-render and hit step 3 validation next cycle.
+        }
+
+        // Standard validation for an existing order in localStorage
+        const freshOrder = await getOrderById(pendingOrder.id);
+
+        const isExpired =
+          freshOrder.expiresAt && new Date(freshOrder.expiresAt) < new Date();
+
+        const isInvalid = freshOrder.status !== "PENDING";
+
+        if (isExpired || isInvalid) {
+          setIsOrderExpired(true);
+        } else {
+          setPendingOrder(freshOrder);
+          // Auto-sync step to 3 when resuming to ensure the UI renders correctly
+          // even if local storage `step` was wiped/corrupted
+          if (step !== 3) {
+            setStep(3);
           }
         }
-      };
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("not found")) {
+          console.warn("Order no longer exists, resetting checkout.");
+          resetCheckout();
+        } else {
+          console.error(
+            "Order validation failed due to network/server error:",
+            error,
+          );
+        }
+      }
+    };
 
-      validateOrder();
-    },
+    validateOrder();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [
-      pendingOrder?.id, // Use ID to prevent infinite re-render loop
-      isLoading,
-      isAuthenticated,
-      resetCheckout,
-      setPendingOrder,
-    ],
-  );
+  }, [
+    pendingOrder?.id,
+    user?.id,
+    isLoading,
+    isAuthenticated,
+    resetCheckout,
+    setPendingOrder,
+    setStep,
+    step,
+    pendingOrder,
+    resumePendingCheckout,
+  ]);
 
   const handleShippingSubmit = async (data: ShippingFormInputs) => {
     if (isCreatingOrder || pendingOrder) return;
@@ -147,10 +195,24 @@ const CheckoutPage = () => {
     );
   }
 
+  // Pre-Order calculations
   const subtotal = items.reduce(
     (acc, item) => acc + item.finalPrice * item.quantity,
     0,
   );
+  const cartShippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+  const cartTotal = subtotal + cartShippingFee;
+
+  // Post-Order calculations
+  const orderItemsSubtotal = pendingOrder
+    ? pendingOrder.items.reduce(
+        (acc, item) => acc + Number(item.priceAtPurchase) * item.quantity,
+        0,
+      )
+    : 0;
+  const orderShippingFee = pendingOrder
+    ? Number(pendingOrder.total) - orderItemsSubtotal
+    : 0;
 
   return (
     <main className="flex-1 max-w-7xl mx-auto p-6 flex flex-col gap-10">
@@ -163,7 +225,6 @@ const CheckoutPage = () => {
           {step === 1 && (
             <div className="flex flex-col gap-8">
               <CheckoutReviewStep />
-
               <button
                 onClick={confirmReview}
                 className="bg-black text-white dark:bg-white dark:text-black p-3 rounded-md hover:opacity-90 transition cursor-pointer"
@@ -216,33 +277,52 @@ const CheckoutPage = () => {
           <h2 className="text-xl font-semibold">Order Summary</h2>
 
           {pendingOrder ? (
-            <>
-              <div className="flex justify-between">
-                <span>Total</span>
-
-                <span className="font-semibold">
-                  ${Number(pendingOrder.total).toFixed(2)}
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between text-sm">
+                <span>Subtotal</span>
+                <span>${orderItemsSubtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>Shipping</span>
+                <span>
+                  {orderShippingFee === 0
+                    ? "Free"
+                    : `$${orderShippingFee.toFixed(2)}`}
                 </span>
               </div>
-
-              <p className="text-sm text-gray-500">
+              <div className="flex justify-between font-semibold text-lg border-t pt-3 mt-1">
+                <span>Total</span>
+                <span>${Number(pendingOrder.total).toFixed(2)}</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">
                 Total locked at order creation.
               </p>
-            </>
+            </div>
           ) : (
-            <>
-              <div className="flex justify-between">
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between text-sm">
                 <span>Subtotal</span>
-
                 <span>${subtotal.toFixed(2)}</span>
               </div>
-
-              <div className="flex justify-between font-semibold text-lg">
+              <div className="flex justify-between text-sm">
+                <span>Shipping</span>
+                <span>
+                  {cartShippingFee === 0
+                    ? "Free"
+                    : `$${cartShippingFee.toFixed(2)}`}
+                </span>
+              </div>
+              <div className="flex justify-between font-semibold text-lg border-t pt-3 mt-1">
                 <span>Total</span>
-
-                <span>${subtotal.toFixed(2)}</span>
+                <span>${cartTotal.toFixed(2)}</span>
               </div>
-            </>
+              {cartShippingFee > 0 && (
+                <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                  Add ${(SHIPPING_THRESHOLD - subtotal).toFixed(2)} more for
+                  free shipping!
+                </p>
+              )}
+            </div>
           )}
         </aside>
       </div>

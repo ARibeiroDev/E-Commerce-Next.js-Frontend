@@ -87,14 +87,15 @@ This project is actively evolving.
 - Variant selection system
 - Authentication flow integration
 - Cart system connected to backend
+- Admin Dashboard
+- User Profile/Dashboard
+- Checkout flow
 
 ### In Progress
 
 - UI improvements and refactoring
 - Image optimization (Cloudinary integration planned)
-- Admin Dashboard
-- User Profile/Dashboard
-- Checkout flow
+- User/Admin order management
 
 ---
 

@@ -63,3 +63,49 @@ export const cancelOrder = (orderId: string) => {
     },
   );
 };
+
+export const requestRefund = (orderId: string) => {
+  return apiFetch<Order>(`${endpoint}/${orderId}/request-refund`, {
+    method: "PATCH",
+    requiresAuth: true,
+  });
+};
+
+export const getAllOrdersAdmin = ({
+  page = 1,
+  limit = 10,
+  sortBy = "createdAt",
+  orderBy = "desc",
+  status,
+  search,
+}: {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  orderBy?: "asc" | "desc";
+  status?: string;
+  search?: string;
+}) => {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    sortBy,
+    orderBy,
+  });
+
+  if (status && status !== "ALL") params.set("status", status);
+  if (search) params.set("search", search);
+
+  return apiFetch<PaginatedResponse<Order[]>>(`orders?${params.toString()}`, {
+    method: "GET",
+    requiresAuth: true,
+  });
+};
+
+export const updateOrderStatusAdmin = (orderId: string, status: string) => {
+  return apiFetch<Order>(`orders/${orderId}/status`, {
+    method: "PATCH",
+    requiresAuth: true,
+    body: JSON.stringify({ status }),
+  });
+};

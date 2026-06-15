@@ -1,10 +1,9 @@
-// types/order.ts
-
 export type OrderStatus =
   | "PENDING"
   | "PAID"
   | "SHIPPED"
   | "DELIVERED"
+  | "REFUND_REQUESTED"
   | "CANCELLED"
   | "REFUNDED";
 
@@ -32,6 +31,7 @@ export type Order = {
   status: OrderStatus;
   total: string;
   items: OrderItem[];
+  userId: string;
   expiresAt?: string;
   createdAt: string;
   shippingName: string;

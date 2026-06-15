@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { useCheckoutStore } from "@/stores/checkoutStore";
 import { updateMe, deleteUser, getMe } from "@/lib/api/users";
-import { getMyOrders, cancelOrder } from "@/lib/api/orders";
+import { getMyOrders, cancelOrder, requestRefund } from "@/lib/api/orders";
 import { Order } from "@/types/order";
 import { logoutUser } from "@/lib/api/auth";
 import type { PrivateUserDto } from "@/types/user";
@@ -16,18 +17,18 @@ import {
   editUserFormSchema,
 } from "@/types/validations/editUserForm";
 import OrderDetailsModal from "@/components/profile/OrderDetailsModal";
-
-type FullUserProfile = PrivateUserDto & { createdAt: string };
+import { getStatusStyle } from "@/utils/getStatusStyles";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, logout } = useAuthStore();
+  const resumePendingCheckout = useCheckoutStore(
+    (state) => state.resumePendingCheckout,
+  );
 
-  // Profile Data State
-  const [fullProfile, setFullProfile] = useState<FullUserProfile | null>(null);
-
-  // Form Setup
+  const [fullProfile, setFullProfile] = useState<PrivateUserDto | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -39,19 +40,13 @@ export default function ProfilePage() {
     resolver: zodResolver(editUserFormSchema),
   });
 
-  // Orders State
   const [orders, setOrders] = useState<Order[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
-
-  // Selected Order Modal State
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  // Danger Zone State
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // 1. Auth Protection & Initialization
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated && !user) {
@@ -61,14 +56,12 @@ export default function ProfilePage() {
 
     if (user) {
       setValue("username", user.username);
-      // Fetch full profile data for the read-only sections
       getMe()
-        .then((data) => setFullProfile(data as FullUserProfile))
+        .then((data) => setFullProfile(data as PrivateUserDto))
         .catch((err) => console.error("Failed to load profile details", err));
     }
   }, [isLoading, isAuthenticated, user, router, setValue]);
 
-  // 2. Fetch Orders
   const fetchOrders = async (currentPage: number) => {
     setIsLoadingOrders(true);
     try {
@@ -86,7 +79,6 @@ export default function ProfilePage() {
     if (isAuthenticated) fetchOrders(page);
   }, [isAuthenticated, page]);
 
-  // 3. Handlers
   const onUpdateSubmit: SubmitHandler<EditUserFormInputs> = async (data) => {
     setSuccessMsg(null);
     clearErrors();
@@ -96,11 +88,9 @@ export default function ProfilePage() {
         ...(data.password ? { password: data.password } : {}),
       };
       await updateMe(payload);
-
       setSuccessMsg("Profile updated successfully!");
-      setValue("password", ""); // Clear password field on success
+      setValue("password", "");
 
-      // Update local profile state to reflect new username instantly
       if (fullProfile) {
         setFullProfile({ ...fullProfile, username: data.username });
       }
@@ -115,11 +105,29 @@ export default function ProfilePage() {
     if (!confirm("Are you sure you want to cancel this order?")) return;
     try {
       await cancelOrder(orderId);
-      // Refresh orders and close modal if open
       fetchOrders(page);
       setSelectedOrder(null);
     } catch (error: unknown) {
       alert(error instanceof Error ? error.message : "Failed to cancel order");
+    }
+  };
+
+  const handleResumeCheckout = (order: Order) => {
+    resumePendingCheckout(order);
+    router.push("/checkout");
+  };
+
+  const handleRefundOrder = async (orderId: string) => {
+    if (!confirm("Are you sure you want to request a refund for this order?"))
+      return;
+    try {
+      await requestRefund(orderId);
+      fetchOrders(page);
+      setSelectedOrder(null);
+    } catch (error: unknown) {
+      alert(
+        error instanceof Error ? error.message : "Failed to request refund",
+      );
     }
   };
 
@@ -134,7 +142,7 @@ export default function ProfilePage() {
     try {
       await deleteUser(user.id);
       await logoutUser();
-      logout(); // clear Zustand store
+      logout();
       router.push("/");
     } catch (error: unknown) {
       alert(
@@ -154,20 +162,18 @@ export default function ProfilePage() {
 
   return (
     <main className="flex-1 px-[5vw] lg:px-[10vw] py-8 animate-appear grid grid-cols-1 md:grid-cols-3 gap-8">
-      {/* LEFT COLUMN: Profile Info, Settings, & Danger Zone */}
       <aside className="space-y-6 col-span-1">
-        {/* 1. Account Overview (Read-Only) */}
         <header className="bg-gray-200 dark:bg-stone-800 p-6 rounded-xl border border-gray-300 dark:border-stone-700">
           <figure className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-300 dark:border-stone-700 m-0">
             <span className="w-14 h-14 bg-stone-950 text-gray-100 rounded-full flex items-center justify-center text-2xl font-bold">
               {fullProfile?.username?.charAt(0).toUpperCase()}
             </span>
-            <figcaption>
+            <figure>
               <h2 className="text-lg font-bold">{fullProfile?.username}</h2>
               <span className="text-sm font-semibold px-2 py-1 bg-gray-100 rounded-full text-stone-700 uppercase tracking-wider mt-1 inline-block">
                 {fullProfile?.role}
               </span>
-            </figcaption>
+            </figure>
           </figure>
 
           <dl className="space-y-4 text-sm">
@@ -208,7 +214,6 @@ export default function ProfilePage() {
           </dl>
         </header>
 
-        {/* 2. Last Shipping Address (Read-Only, Dynamic) */}
         {orders.length > 0 && (
           <section className="bg-gray-200 dark:bg-stone-800 p-6 rounded-xl border border-gray-300 dark:border-stone-700">
             <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-gray-500 dark:text-gray-400">
@@ -237,7 +242,6 @@ export default function ProfilePage() {
           </section>
         )}
 
-        {/* 3. Editable Profile Settings Form */}
         <section className="bg-gray-200 dark:bg-stone-800 p-6 rounded-xl border border-gray-300 dark:border-stone-700">
           <h2 className="text-lg font-bold mb-4">Edit Info</h2>
           <form
@@ -252,7 +256,7 @@ export default function ProfilePage() {
                 id="username"
                 type="text"
                 {...register("username")}
-                className="w-full border border-gray-300 dark:border-stone-700 p-2 rounded-lg outline-none focus:border-gray-500 bg-white dark:bg-stone-900 transition"
+                className="w-full border border-gray-300 dark:border-stone-700 p-2 rounded-lg outline-none bg-white dark:bg-stone-900 transition"
               />
               {errors.username && (
                 <p className="text-sm text-red-500">
@@ -270,7 +274,7 @@ export default function ProfilePage() {
                 type="password"
                 {...register("password")}
                 placeholder="Leave blank to keep current"
-                className="w-full border border-gray-300 dark:border-stone-700 p-2 rounded-lg outline-none focus:border-gray-500 bg-white dark:bg-stone-900 transition"
+                className="w-full border border-gray-300 dark:border-stone-700 p-2 rounded-lg outline-none bg-white dark:bg-stone-900 transition"
               />
               {errors.password && (
                 <p className="text-sm text-red-500">
@@ -284,7 +288,6 @@ export default function ProfilePage() {
                 {errors.root.message}
               </p>
             )}
-
             {successMsg && (
               <p className="text-sm text-green-600 text-center font-medium">
                 {successMsg}
@@ -301,14 +304,12 @@ export default function ProfilePage() {
           </form>
         </section>
 
-        {/* 4. Danger Zone */}
         <section className="bg-red-50 dark:bg-red-950/20 p-6 rounded-xl border border-red-200 dark:border-red-900/50">
           <h2 className="text-lg font-bold text-red-600 dark:text-red-500 mb-2">
-            Danger Zone
+            Delete account
           </h2>
           <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-            Once you delete your account, there is no going back. Please be
-            certain.
+            Once you delete your account, there is no going back.
           </p>
           <button
             onClick={handleDeleteAccount}
@@ -320,7 +321,6 @@ export default function ProfilePage() {
         </section>
       </aside>
 
-      {/* RIGHT COLUMN: Order History */}
       <section className="md:col-span-2 flex flex-col h-full bg-gray-200 dark:bg-stone-800 p-6 rounded-xl border border-gray-300 dark:border-stone-700">
         <header className="mb-6">
           <h2 className="text-xl font-bold">Order History</h2>
@@ -342,8 +342,8 @@ export default function ProfilePage() {
             </p>
           </article>
         ) : (
-          <div className="flex flex-col justify-between flex-1">
-            <ul className="space-y-4 m-0 p-0 list-none">
+          <>
+            <ul className="list-none flex flex-col gap-4 flex-1">
               {orders.map((order) => (
                 <li key={order.id}>
                   <article
@@ -370,13 +370,7 @@ export default function ProfilePage() {
                         ${Number(order.total).toFixed(2)}
                       </span>
                       <span
-                        className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                          order.status === "PENDING"
-                            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                            : order.status === "CANCELLED"
-                              ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                              : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                        }`}
+                        className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusStyle(order.status)}`}
                       >
                         {order.status}
                       </span>
@@ -386,26 +380,24 @@ export default function ProfilePage() {
               ))}
             </ul>
 
-            {/* Pagination Implementation */}
-            <footer className="pt-6 mt-6 border-t border-gray-300 dark:border-stone-700">
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                hasNextPage={page < totalPages}
-                hasPreviousPage={page > 1}
-                onPageChange={(newPage) => setPage(newPage)}
-              />
-            </footer>
-          </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              hasNextPage={page < totalPages}
+              hasPreviousPage={page > 1}
+              onPageChange={(newPage) => setPage(newPage)}
+            />
+          </>
         )}
       </section>
 
-      {/* MODAL: Order Details Overlay */}
       {selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
           onCancelOrder={handleCancelOrder}
+          onResumeCheckout={handleResumeCheckout}
+          onRefundOrder={handleRefundOrder}
         />
       )}
     </main>

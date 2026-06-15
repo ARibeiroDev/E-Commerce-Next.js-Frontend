@@ -7,12 +7,16 @@ interface OrderDetailsModalProps {
   order: Order;
   onClose: () => void;
   onCancelOrder: (orderId: string) => Promise<void>;
+  onResumeCheckout: (order: Order) => void;
+  onRefundOrder: (orderId: string) => Promise<void>;
 }
 
 export default function OrderDetailsModal({
   order,
   onClose,
   onCancelOrder,
+  onResumeCheckout,
+  onRefundOrder,
 }: OrderDetailsModalProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -37,9 +41,10 @@ export default function OrderDetailsModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className="bg-gray-100 dark:bg-stone-900 rounded-2xl p-6 md:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-stone-700"
+        onClick={(e) => e.stopPropagation()}
+        className="bg-gray-100 dark:bg-stone-900 rounded-2xl p-6 md:p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200 dark:border-stone-700 flex flex-col"
       >
-        <header className="flex justify-between items-start mb-6">
+        <header className="flex justify-between items-start mb-6 shrink-0">
           <div>
             <h2 id="modal-title" className="text-2xl font-bold">
               Order Details
@@ -57,7 +62,7 @@ export default function OrderDetailsModal({
           </button>
         </header>
 
-        <section className="space-y-6">
+        <section className="space-y-6 flex-1 overflow-y-auto pr-2">
           {/* Status & Shipping Summary */}
           <div className="bg-gray-50 dark:bg-stone-800 p-5 rounded-xl text-sm border border-gray-200 dark:border-stone-700 space-y-3">
             <dl className="space-y-2 m-0">
@@ -123,29 +128,50 @@ export default function OrderDetailsModal({
               ))}
             </ul>
           </section>
-
-          {/* Footer & Actions */}
-          <footer className="pt-4 border-t border-gray-300 dark:border-stone-700">
-            <div className="flex justify-between items-center font-black text-xl mb-4">
-              <span>Total</span>
-              <span>${Number(order.total).toFixed(2)}</span>
-            </div>
-
-            {order.status === "PENDING" && (
-              <div className="pt-2">
-                <button
-                  onClick={() => onCancelOrder(order.id)}
-                  className="w-full bg-red-600 text-gray-50 font-medium rounded-xl py-3 hover:bg-red-700 transition shadow-sm cursor-pointer"
-                >
-                  Cancel Pending Order
-                </button>
-                <p className="text-xs text-center text-gray-500 mt-3 px-4">
-                  Cancelling will release your reserved stock back to the store.
-                </p>
-              </div>
-            )}
-          </footer>
         </section>
+
+        {/* Footer & Actions */}
+        <footer className="pt-6 mt-4 border-t border-gray-300 dark:border-stone-700 shrink-0">
+          <div className="flex justify-between items-center font-black text-xl mb-6">
+            <span>Total</span>
+            <span>${Number(order.total).toFixed(2)}</span>
+          </div>
+
+          {/* Action Conditionals */}
+          {order.status === "PENDING" && (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => onResumeCheckout(order)}
+                className="w-full bg-stone-950 text-white rounded-xl py-3 hover:bg-stone-800 transition shadow-sm cursor-pointer font-medium"
+              >
+                Resume Checkout
+              </button>
+              <button
+                onClick={() => onCancelOrder(order.id)}
+                className="w-full bg-red-50 text-red-600 dark:bg-red-950/20 dark:text-red-400 border border-red-200 dark:border-red-900/50 rounded-xl py-3 hover:bg-red-100 dark:hover:bg-red-900/40 transition shadow-sm cursor-pointer font-medium"
+              >
+                Cancel Pending Order
+              </button>
+              <p className="text-xs text-center text-gray-500 mt-1">
+                Cancelling will release your reserved stock back to the store.
+              </p>
+            </div>
+          )}
+
+          {(order.status === "PAID" || order.status === "DELIVERED") && (
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => onRefundOrder(order.id)}
+                className="w-full bg-gray-200 text-stone-900 dark:bg-stone-800 dark:text-white rounded-xl py-3 hover:bg-gray-300 dark:hover:bg-stone-700 transition shadow-sm cursor-pointer font-medium"
+              >
+                Request Refund
+              </button>
+              <p className="text-xs text-center text-gray-500 mt-1">
+                Refunds are subject to our 30-day return policy.
+              </p>
+            </div>
+          )}
+        </footer>
       </article>
     </div>
   );

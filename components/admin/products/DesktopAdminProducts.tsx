@@ -1,15 +1,22 @@
 import { PaginatedResponse } from "@/types/pagination";
 import { Product } from "@/types/product";
-import { Pen, Trash } from "lucide-react";
+import { ArchiveRestore, Pen, Trash } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 export type AdminProductsProps = {
   data: PaginatedResponse<Product[]>;
   handleDelete: (slug: string) => void;
+  handleRestore: (slug: string) => void;
+  archivedView: boolean;
 };
 
-const DesktopAdminProducts = ({ data, handleDelete }: AdminProductsProps) => {
+const DesktopAdminProducts = ({
+  data,
+  handleDelete,
+  handleRestore,
+  archivedView,
+}: AdminProductsProps) => {
   const router = useRouter();
 
   return (
@@ -66,18 +73,26 @@ const DesktopAdminProducts = ({ data, handleDelete }: AdminProductsProps) => {
                 >
                   <button
                     onClick={() => router.push(`/admin/products/${p.slug}`)}
-                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1 "
+                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Pen size={16} />
                     Edit
                   </button>
-                  <button
-                    onClick={() => handleDelete(p.slug)}
-                    className="text-red-600 dark:text-red-400 font-medium hover:underline flex items-center gap-1 "
-                  >
-                    <Trash size={16} />
-                    Delete
-                  </button>
+                  {archivedView ? (
+                    <button
+                      onClick={() => handleRestore?.(p.slug)}
+                      className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <ArchiveRestore size={16} /> Restore
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleDelete(p.slug)}
+                      className="text-red-600 dark:text-red-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash size={16} /> Delete
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

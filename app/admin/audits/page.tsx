@@ -85,9 +85,11 @@ const AdminAuditsPage = () => {
 
   return (
     <>
-      <header className="border-b border-gray-200 pb-5 mt-4">
-        <h3 className="text-xl font-semibold">System Audits Logs</h3>
-        <p className="mt-2 text-sm text-gray-400">
+      <header className="border-b border-gray-200 pb-5">
+        <h2 className="text-xl sm:text-2xl font-semibold">
+          System Audits Logs
+        </h2>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Immutable historical telemetry records tracking admin activity,
           configurations modifications, and user promotion lifecycles.
         </p>
@@ -102,7 +104,7 @@ const AdminAuditsPage = () => {
       {loading ? (
         <div className="flex min-h-screen items-center justify-center">
           <span className="text-stone-500 animate-pulse">
-            Loading audits database...
+            Loading audits...
           </span>
         </div>
       ) : logs.length === 0 ? (

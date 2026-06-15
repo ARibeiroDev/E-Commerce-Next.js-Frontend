@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { LoginDto } from "@/types/auth";
 import { AuthUserDto } from "@/types/user";
 import { loginUser, logoutUser, refreshToken } from "@/lib/api/auth";
+import { useCheckoutStore } from "./checkoutStore";
 
 type AuthState = {
   user: AuthUserDto | null;
@@ -34,6 +35,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: async () => {
     await logoutUser();
+
+    // Security guarantee: Wipe the local storage checkout data
+    useCheckoutStore.getState().resetCheckout();
 
     set({
       user: null,

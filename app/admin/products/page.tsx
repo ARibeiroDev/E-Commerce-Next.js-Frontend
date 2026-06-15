@@ -1,26 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getProducts, deleteProduct } from "@/lib/api/products";
+import { getProducts, deleteProduct, updateProduct } from "@/lib/api/products";
 import { Product } from "@/types/product";
 import Pagination from "@/components/ui/Pagination";
 import { useRouter } from "next/navigation";
 import { PaginatedResponse } from "@/types/pagination";
 import DesktopAdminProducts from "@/components/admin/products/DesktopAdminProducts";
 import MobileAdminProducts from "@/components/admin/products/MobileAdminProducts";
+import { revalidateProduct, revalidateProducts } from "@/utils/revalidateCache";
 
 export default function AdminProductsPage() {
   const [data, setData] = useState<PaginatedResponse<Product[]> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [archivedView, setArchivedView] = useState(false);
+
   const router = useRouter();
 
-  const fetchProducts = async (page = 1) => {
+  const fetchProducts = async (page = 1, archived = archivedView) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getProducts({ page, limit: 8 });
+      const res = await getProducts({ page, limit: 8, isArchived: archived });
       setData(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to load products");
@@ -34,35 +37,39 @@ export default function AdminProductsPage() {
 
     try {
       await deleteProduct(slug);
-      fetchProducts(data?.meta.currentPage || 1);
+      await revalidateProduct(slug);
+      await revalidateProducts();
+      fetchProducts(data?.meta.currentPage || 1, archivedView);
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Delete failed");
     }
+  };
+
+  const handleRestore = async (slug: string) => {
+    if (!confirm("Restore this product to active status?")) return;
+
+    try {
+      await updateProduct(slug, { isArchived: false });
+      await revalidateProduct(slug);
+      await revalidateProducts();
+      fetchProducts(data?.meta.currentPage || 1, archivedView);
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Restore failed");
+    }
+  };
+
+  const handleViewChange = (archived: boolean) => {
+    setArchivedView(archived);
+    fetchProducts(1, archived);
   };
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
-  if (loading)
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <span className="text-stone-500 animate-pulse">
-          Loading products database...
-        </span>
-      </div>
-    );
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
-  if (!data)
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="p-4">No products found.</p>
-      </div>
-    );
-
   return (
     <>
-      <header className="flex justify-between items-center mt-4">
+      <header className="flex justify-between items-center">
         <h2 className="text-xl sm:text-2xl font-semibold">Products</h2>
 
         <button
@@ -79,17 +86,67 @@ export default function AdminProductsPage() {
         </button>
       </header>
 
-      <MobileAdminProducts data={data} handleDelete={handleDelete} />
+      <nav className="flex gap-2 bg-gray-100 dark:bg-stone-800 p-1 rounded-md w-max mb-6">
+        <button
+          onClick={() => handleViewChange(false)}
+          className={`px-4 py-2 rounded text-sm font-medium transition-colors cursor-pointer ${
+            !archivedView
+              ? "bg-white dark:bg-stone-700 shadow-sm text-stone-900 dark:text-white"
+              : "text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
+          }`}
+        >
+          Active
+        </button>
+        <button
+          onClick={() => handleViewChange(true)}
+          className={`px-4 py-2 rounded text-sm font-medium transition-colors cursor-pointer ${
+            archivedView
+              ? "bg-white dark:bg-stone-700 shadow-sm text-stone-900 dark:text-white"
+              : "text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200"
+          }`}
+        >
+          Deleted
+        </button>
+      </nav>
 
-      <DesktopAdminProducts data={data} handleDelete={handleDelete} />
+      {loading ? (
+        <div className="flex flex-1 items-center justify-center">
+          <span className="text-stone-500 animate-pulse">
+            Loading products...
+          </span>
+        </div>
+      ) : error ? (
+        <p className="p-4 text-red-500">{error}</p>
+      ) : !data || data.data.length === 0 ? (
+        <div className="text-center py-12 border border-dashed border-gray-300 rounded-lg text-gray-400 mb-6">
+          <p className="text-stone-500">
+            No {archivedView ? "archived" : "active"} products found.
+          </p>
+        </div>
+      ) : (
+        <>
+          <MobileAdminProducts
+            data={data}
+            handleDelete={handleDelete}
+            handleRestore={handleRestore}
+            archivedView={archivedView}
+          />
+          <DesktopAdminProducts
+            data={data}
+            handleDelete={handleDelete}
+            handleRestore={handleRestore}
+            archivedView={archivedView}
+          />
 
-      <Pagination
-        currentPage={data.meta.currentPage}
-        totalPages={data.meta.totalPages}
-        hasNextPage={data.meta.hasNextPage}
-        hasPreviousPage={data.meta.hasPreviousPage}
-        onPageChange={(page) => fetchProducts(page)}
-      />
+          <Pagination
+            currentPage={data.meta.currentPage}
+            totalPages={data.meta.totalPages}
+            hasNextPage={data.meta.hasNextPage}
+            hasPreviousPage={data.meta.hasPreviousPage}
+            onPageChange={(page) => fetchProducts(page, archivedView)}
+          />
+        </>
+      )}
     </>
   );
 }

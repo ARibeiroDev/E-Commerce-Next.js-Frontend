@@ -16,11 +16,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <AdminGuard>
       <main className="animate-appear flex flex-1 flex-col gap-6 md:gap-0 md:flex-row">
-        <aside className="w-full md:w-3/12 md:max-w-xs md:pl-4 md:border-r md:border-gray-200">
-          <h2 className="text-center font-semibold uppercase tracking-wider border-b py-4">
-            Admin Console
-          </h2>
-          <nav className="flex items-center justify-evenly md:flex-col  md:items-end gap-2 mt-6">
+        <aside className="w-full md:w-3/12 md:max-w-xs md:border-r md:border-gray-200 dark:md:border-stone-800">
+          <Link href="/admin">
+            <h2 className="text-center font-semibold uppercase tracking-wider border-b border-gray-200 dark:border-stone-800 py-4">
+              Admin Console
+            </h2>
+          </Link>
+          <nav className="flex items-center justify-evenly md:flex-col  md:items-end gap-0.5 mt-6">
             <Link
               href="/admin/products"
               className={linkClass("/admin/products")}
@@ -29,6 +31,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Link>
             <Link href="/admin/users" className={linkClass("/admin/users")}>
               Users
+            </Link>
+            <Link href="/admin/orders" className={linkClass("/admin/orders")}>
+              Orders
             </Link>
 
             {user?.role === "SUPERADMIN" && (
@@ -39,7 +44,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </nav>
         </aside>
 
-        <section className="flex gap-6 flex-col h-full flex-1 md:w-9/12 px-[5vw] lg:px-[7vw] animate-appear">
+        <section className="flex gap-6 flex-col h-full py-4 flex-1 md:w-9/12 px-[5vw] lg:px-[7vw] animate-appear">
           {children}
         </section>
       </main>

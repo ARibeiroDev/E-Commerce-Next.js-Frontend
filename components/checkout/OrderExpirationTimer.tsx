@@ -42,7 +42,7 @@ const OrderExpirationTimer = ({ expiresAt, onExpire }: Props) => {
   }, [expiresAt, onExpire]);
 
   return (
-    <header className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-3 rounded-md text-sm">
+    <header className="bg-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-3 rounded-md text-sm">
       {expired ? (
         <span>Your order has expired</span>
       ) : (

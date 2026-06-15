@@ -6,5 +6,6 @@ export type ProductQuery = {
   categoryId?: string;
   title?: string;
   featured?: boolean;
+  isArchived?: boolean;
   tags?: string[];
 };

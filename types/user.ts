@@ -15,6 +15,7 @@ export type PrivateUserDto = {
   role: Role;
   isVerified: boolean;
   isActive: boolean;
+  createdAt: string;
 };
 
 // Public user (lists, comments)

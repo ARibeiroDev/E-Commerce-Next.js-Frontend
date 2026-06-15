@@ -2,35 +2,26 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-
 import { CreateOrderPayload, Order } from "@/types/order";
 
 type CheckoutStep = 1 | 2 | 3;
 
 type CheckoutStore = {
   step: CheckoutStep;
-
   reviewConfirmed: boolean;
   shippingConfirmed: boolean;
-
   shippingData: CreateOrderPayload | null;
   pendingOrder: Order | null;
-
   isCreatingOrder: boolean;
-
   hasHydrated: boolean;
-
   setHasHydrated: (value: boolean) => void;
-
   setStep: (step: CheckoutStep) => void;
-
   confirmReview: () => void;
   confirmShipping: () => void;
-
   setShippingData: (data: CreateOrderPayload) => void;
   setPendingOrder: (order: Order | null) => void;
   setIsCreatingOrder: (value: boolean) => void;
-
+  resumePendingCheckout: (order: Order) => void;
   resetCheckout: () => void;
 };
 
@@ -75,6 +66,22 @@ export const useCheckoutStore = create<CheckoutStore>()(
       setPendingOrder: (pendingOrder) => set({ pendingOrder }),
 
       setIsCreatingOrder: (isCreatingOrder) => set({ isCreatingOrder }),
+
+      resumePendingCheckout: (order) =>
+        set({
+          step: 3,
+          reviewConfirmed: true,
+          shippingConfirmed: true,
+          pendingOrder: order,
+          shippingData: {
+            shippingName: order.shippingName,
+            shippingPhone: order.shippingPhone,
+            shippingAddress: order.shippingAddress,
+            shippingCity: order.shippingCity,
+            shippingPostalCode: order.shippingPostalCode,
+            shippingCountry: order.shippingCountry,
+          },
+        }),
 
       resetCheckout: () =>
         set({

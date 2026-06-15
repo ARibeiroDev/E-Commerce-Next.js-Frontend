@@ -2,7 +2,12 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AdminProductsProps } from "./DesktopAdminProducts";
 
-const MobileAdminProducts = ({ data, handleDelete }: AdminProductsProps) => {
+const MobileAdminProducts = ({
+  data,
+  handleDelete,
+  handleRestore,
+  archivedView,
+}: AdminProductsProps) => {
   const router = useRouter();
 
   return (
@@ -55,15 +60,27 @@ const MobileAdminProducts = ({ data, handleDelete }: AdminProductsProps) => {
             >
               Edit
             </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleDelete(p.slug);
-              }}
-              className="px-3 py-1.5 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors cursor-pointer"
-            >
-              Delete
-            </button>
+            {archivedView ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRestore?.(p.slug);
+                }}
+                className="px-3 py-1.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 rounded text-sm font-medium hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors cursor-pointer"
+              >
+                Restore
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(p.slug);
+                }}
+                className="px-3 py-1.5 bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded text-sm font-medium hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors cursor-pointer"
+              >
+                Archive
+              </button>
+            )}
           </section>
         </article>
       ))}
