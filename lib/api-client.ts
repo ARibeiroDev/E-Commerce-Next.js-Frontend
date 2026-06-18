@@ -7,6 +7,19 @@ if (!API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not defined");
 }
 
+// Custom error class to hold backend payload metadata
+export class ApiError extends Error {
+  status: number;
+  info: unknown; // Stores the raw parsed JSON backend response
+
+  constructor(message: string, status: number, info: unknown) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.info = info;
+  }
+}
+
 type FetchOpts = RequestInit & {
   requiresAuth?: boolean;
   _retry?: boolean;
@@ -103,7 +116,7 @@ export async function apiFetch<T>(
             ? data.message.join(", ")
             : `Request failed with status ${res.status}`;
 
-    throw new Error(message);
+    throw new ApiError(message, res.status, data);
   }
 
   return data as T;

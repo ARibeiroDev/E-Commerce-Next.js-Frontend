@@ -3,7 +3,7 @@
 import useCart from "@/hooks/useCart";
 import { Product } from "@/types/product";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 
 const ProductInteraction = ({
@@ -18,6 +18,38 @@ const ProductInteraction = ({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { addToCart } = useCart();
+
+  const [quantity, setQuantity] = useState(1);
+
+  // Normalize incoming props to handle unselected route state
+  const sizeFilter = selectedSize || "";
+  const colorFilter = selectedColor || "";
+
+  const selectedVariant = product.variants.find(
+    (v) => v.size === sizeFilter && v.color === colorFilter,
+  );
+
+  // Dynamic stock based on selected size and color
+  const maxStock = useMemo(() => {
+    if (selectedVariant)
+      return Math.max(0, selectedVariant.stock - selectedVariant.reservedStock);
+    const filtered = product.variants.filter(
+      (v) =>
+        (!sizeFilter || v.size === sizeFilter) &&
+        (!colorFilter || v.color === colorFilter),
+    );
+    return filtered.length > 0 ? Math.max(...filtered.map((v) => v.stock)) : 1;
+  }, [selectedVariant, product.variants, sizeFilter, colorFilter]);
+
+  useEffect(() => {
+    if (maxStock > 0 && quantity > maxStock) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setQuantity(maxStock);
+    } else if (maxStock === 0) {
+      setQuantity(1);
+    }
+  }, [maxStock, quantity]);
 
   // Global are out of stock
   const isGlobalOutOfStock =
@@ -27,36 +59,13 @@ const ProductInteraction = ({
   // Check if product is archived
   const isArchived = product.isArchived;
 
-  // Normalize incoming props to handle unselected route state
-  const sizeFilter = selectedSize || "";
-  const colorFilter = selectedColor || "";
-
-  const selectedVariant = product.variants.find(
-    (v) => v.size === sizeFilter && v.color === colorFilter,
-  );
-  const [quantity, setQuantity] = useState(1);
-  const { addToCart } = useCart();
-
-  // Dynamic stock based on selected size and color
-  const maxStock = useMemo(() => {
-    if (selectedVariant) return selectedVariant.stock;
-    const filtered = product.variants.filter(
-      (v) =>
-        (!sizeFilter || v.size === sizeFilter) &&
-        (!colorFilter || v.color === colorFilter),
-    );
-    return filtered.length > 0 ? Math.max(...filtered.map((v) => v.stock)) : 1;
-  }, [selectedVariant, product.variants, sizeFilter, colorFilter]);
-
-  const safeQuantity = Math.min(quantity, maxStock);
-
   const colors = Array.from(new Set(product.variants.map((v) => v.color)));
   const sizes = Array.from(new Set(product.variants.map((v) => v.size)));
 
   const isOutOfStock =
     sizeFilter && colorFilter
       ? !selectedVariant || selectedVariant.stock === 0
-      : product.variants.every((v) => v.stock === 0);
+      : isGlobalOutOfStock;
 
   // Available sizes for selected color
   const availableSizes = useMemo(() => {
@@ -94,7 +103,13 @@ const ProductInteraction = ({
     );
 
     if (nextVariant) {
-      setQuantity((prev) => Math.min(prev, nextVariant.stock));
+      const nextAvailableStock = Math.max(
+        0,
+        nextVariant.stock - nextVariant.reservedStock,
+      );
+      setQuantity((prev) =>
+        Math.min(prev, nextAvailableStock > 0 ? nextAvailableStock : 1),
+      );
     }
 
     router.push(`${pathname}?${params.toString()}`, {
@@ -103,7 +118,7 @@ const ProductInteraction = ({
   };
 
   const handleQuantityChange = (type: "increment" | "decrement") => {
-    if (isArchived) return;
+    if (isArchived || maxStock === 0) return;
     if (type === "increment") {
       setQuantity((prev) => (prev < maxStock ? prev + 1 : prev));
     } else {
@@ -120,9 +135,9 @@ const ProductInteraction = ({
         (v) =>
           (!sizeFilter || v.size === sizeFilter) &&
           (!colorFilter || v.color === colorFilter) &&
-          v.stock > 0,
+          v.stock - v.reservedStock > 0,
       ) ||
-      product.variants.find((v) => v.stock > 0) ||
+      product.variants.find((v) => v.stock - v.reservedStock > 0) ||
       product.variants[0]
     );
   };
@@ -134,9 +149,19 @@ const ProductInteraction = ({
     }
 
     const variantToUse = getTargetVariant();
+    const currentAvailableStock = variantToUse
+      ? Math.max(0, variantToUse.stock - variantToUse.reservedStock)
+      : 0;
 
-    if (!variantToUse || variantToUse.stock === 0) {
+    if (!variantToUse || currentAvailableStock === 0) {
       toast.error("The selected variant is currently out of stock.");
+      return;
+    }
+
+    if (quantity > currentAvailableStock) {
+      toast.error(
+        `Cannot add. Only ${currentAvailableStock} items left in stock.`,
+      );
       return;
     }
 
@@ -171,9 +196,20 @@ const ProductInteraction = ({
     const variantToUse = getTargetVariant();
     if (!variantToUse) return;
 
+    const currentAvailableStock = Math.max(
+      0,
+      variantToUse.stock - variantToUse.reservedStock,
+    );
+    if (currentAvailableStock === 0) {
+      toast.error("Out of stock!");
+      return;
+    }
+
+    const checkoutQuantity = Math.min(quantity, currentAvailableStock);
+
     addToCart({
       sku: variantToUse.sku,
-      quantity: safeQuantity,
+      quantity: checkoutQuantity,
       slug: product.slug,
       productTitle: product.title,
       image: product.images[0],
@@ -315,7 +351,9 @@ const ProductInteraction = ({
       {/* Stock */}
       <p className="text-sm text-stone-500 dark:text-gray-400">
         {selectedVariant
-          ? `${selectedVariant.stock} in stock`
+          ? maxStock > 0
+            ? `${maxStock} in stock`
+            : "Out of stock"
           : sizeFilter || colorFilter
             ? "Select remaining options to see exact stock"
             : "Select variant options"}
@@ -324,6 +362,8 @@ const ProductInteraction = ({
       {/* Quantity */}
       <div className="flex items-center">
         <button
+          type="button"
+          disabled={quantity <= 1 || isOutOfStock}
           onClick={() => handleQuantityChange("decrement")}
           className="w-10 h-10 rounded-l-md border cursor-pointer"
         >
@@ -331,22 +371,24 @@ const ProductInteraction = ({
         </button>
 
         <input
-          type="text"
-          value={safeQuantity}
+          type="number"
+          value={maxStock === 0 ? 0 : quantity}
+          disabled={isOutOfStock || maxStock === 0}
           min={1}
           max={maxStock}
           onChange={(e) => {
-            let value = Number(e.target.value);
-            if (isNaN(value)) value = 1;
-            value = Math.max(1, Math.min(value, maxStock));
+            let value = parseInt(e.target.value, 10);
+            if (isNaN(value) || value < 1) value = 1;
+            if (value > maxStock) value = maxStock;
             setQuantity(value);
           }}
-          className="w-14 h-10 text-center border bg-transparent"
+          className="w-14 h-10 text-center border bg-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:margin-0 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:margin-0 [&::-webkit-inner-spin-button]:appearance-none"
         />
 
         <button
+          type="button"
           onClick={() => handleQuantityChange("increment")}
-          disabled={quantity >= maxStock}
+          disabled={quantity >= maxStock || isOutOfStock}
           className="w-10 h-10 rounded-r-md border disabled:opacity-40 cursor-pointer"
         >
           +
@@ -356,7 +398,7 @@ const ProductInteraction = ({
       {/* Actions */}
       <div className="flex flex-col gap-3 mt-2">
         <button
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || maxStock === 0}
           onClick={handleAddToCart}
           className="w-full py-3 rounded-md bg-stone-900 text-white dark:bg-gray-100 dark:text-black disabled:opacity-40 cursor-pointer"
         >
@@ -364,7 +406,7 @@ const ProductInteraction = ({
         </button>
 
         <button
-          disabled={isOutOfStock}
+          disabled={isOutOfStock || maxStock === 0}
           onClick={handleBuyNow}
           className="w-full py-3 rounded-md bg-orange-500 text-white disabled:opacity-40 cursor-pointer"
         >

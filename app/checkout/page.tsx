@@ -20,16 +20,25 @@ import {
   getMyOrders,
 } from "@/lib/api/orders";
 import { ShippingFormInputs } from "@/types/validations/shippingForm";
+import { toast } from "react-toastify";
+import {
+  extractStockConflict,
+  StockConflict,
+} from "@/utils/extractConflictError";
+import CheckoutConflictModal from "@/components/checkout/CheckoutConflictModal";
 
 const SHIPPING_THRESHOLD = 100;
 const SHIPPING_FEE = 15;
 
 const CheckoutPage = () => {
   const router = useRouter();
-  const { items } = useCart();
+  const { items, updateCartItem, removeCartItem } = useCart();
 
   const [isCancelling, setIsCancelling] = useState(false);
   const [isOrderExpired, setIsOrderExpired] = useState(false);
+
+  // State to control the stock conflict modal
+  const [conflictData, setConflictData] = useState<StockConflict | null>(null);
 
   const {
     step,
@@ -150,8 +159,18 @@ const CheckoutPage = () => {
       const order = await createOrder(data);
       setPendingOrder(order);
       confirmShipping();
-    } catch (error) {
+    } catch (error: unknown) {
+      const conflict = extractStockConflict(error);
+
+      if (conflict) {
+        setConflictData(conflict);
+        return;
+      }
+
       console.error("Error creating order:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create order.",
+      );
     } finally {
       setIsCreatingOrder(false);
     }
@@ -174,7 +193,33 @@ const CheckoutPage = () => {
 
   const handleReturnToCart = () => {
     resetCheckout();
+    setConflictData(null);
     router.push("/cart");
+  };
+
+  const handleAdjustAndContinue = () => {
+    if (!conflictData) return;
+
+    if (conflictData.availableStock > 0) {
+      // Adjust the cart quantity down to what is available
+      updateCartItem(conflictData.sku, conflictData.availableStock);
+      toast.info(
+        `Cart updated to the remaining ${conflictData.availableStock} units.`,
+      );
+      setConflictData(null);
+    } else {
+      // If it completely sold out while they were typing their address
+      removeCartItem(conflictData.sku);
+      toast.error(
+        "This item has completely run out of stock and was removed from your cart.",
+      );
+      setConflictData(null);
+
+      // If that was the only item in their cart, send them back
+      if (items.length <= 1) {
+        handleReturnToCart();
+      }
+    }
   };
 
   const hasActiveCheckout = !!pendingOrder;
@@ -326,6 +371,14 @@ const CheckoutPage = () => {
           )}
         </aside>
       </div>
+
+      {conflictData && (
+        <CheckoutConflictModal
+          conflictData={conflictData}
+          handleAdjustAndContinue={handleAdjustAndContinue}
+          handleReturnToCart={handleReturnToCart}
+        />
+      )}
     </main>
   );
 };

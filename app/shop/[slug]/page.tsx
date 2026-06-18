@@ -66,7 +66,7 @@ const ProductPage = async ({
     <main className="flex-1 px-[5vw] lg:px-[10vw] flex flex-col">
       <Suspense fallback={<ProductSkeleton />}>
         <article className="flex flex-col gap-4 md:flex-row md:gap-12 my-8 bg-gray-200 dark:bg-stone-800 rounded-md p-4 transition-all duration-100 ease-in-out">
-          <figure className="w-full xl:w-5/12 transition-all duration-100 ease-in-out relative aspect-square">
+          <figure className="w-full md:max-w-5/12 transition-all duration-100 ease-in-out relative aspect-square">
             <Image
               src={product.images[0]}
               alt={product.title}
