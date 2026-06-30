@@ -256,6 +256,7 @@ export default function ProfilePage() {
                 id="username"
                 type="text"
                 {...register("username")}
+                autoComplete="username"
                 className="w-full border border-gray-300 dark:border-stone-700 p-2 rounded-lg outline-none bg-white dark:bg-stone-900 transition"
               />
               {errors.username && (

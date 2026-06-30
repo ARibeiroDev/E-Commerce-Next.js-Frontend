@@ -1,5 +1,10 @@
 import LoginForm from "@/components/forms/auth/LoginForm";
 import Link from "next/link";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Login",
+};
 
 const LoginPage = () => {
   return (

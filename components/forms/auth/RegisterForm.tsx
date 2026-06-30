@@ -54,7 +54,7 @@ const RegisterForm = () => {
         required
         type="text"
         id="username"
-        placeholder="John Doe"
+        placeholder="John_Doe23"
         className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400"
         {...register("username")}
       />

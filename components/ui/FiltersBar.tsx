@@ -52,6 +52,7 @@ const FiltersBar = ({
       />
 
       <select
+        id="category"
         value={selectedCategory}
         onChange={(e) => handleFilterChange("categoryId", e.target.value)}
         className="border rounded px-3 py-2 dark:bg-stone-700"
@@ -65,6 +66,7 @@ const FiltersBar = ({
       </select>
 
       <select
+        id="sort"
         value={`${sortBy}-${orderBy}`}
         onChange={(e) => {
           const [field, order] = e.target.value.split("-");

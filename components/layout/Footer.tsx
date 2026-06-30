@@ -13,31 +13,44 @@ const Footer = () => {
 
       <section className="flex flex-col gap-4 items-center sm:items-start">
         <p className="text-white font-semibold">More</p>
-        <Link href="/" className="hover:text-white">
+        <Link href="/about" className="hover:text-white">
           About
         </Link>
-        <Link href="/" className="hover:text-white">
+        <Link href="/contact" className="hover:text-white">
           Contact
         </Link>
-        <Link href="/" className="hover:text-white">
+        <Link href="/blog" className="hover:text-white">
           Blog
-        </Link>
-        <Link href="/" className="hover:text-white">
-          Affiliate Program
         </Link>
       </section>
       <section className="flex flex-col gap-4 items-center sm:items-start">
         <p className="text-white font-semibold">Follow Us</p>
-        <Link href="/" className="hover:text-white">
+        <Link
+          href="https://www.facebook.com/"
+          target="_blank"
+          className="hover:text-white"
+        >
           Facebook
         </Link>
-        <Link href="/" className="hover:text-white">
+        <Link
+          href="https://www.instagram.com/"
+          target="_blank"
+          className="hover:text-white"
+        >
           Instagram
         </Link>
-        <Link href="/" className="hover:text-white">
+        <Link
+          href="https://www.youtube.com/"
+          target="_blank"
+          className="hover:text-white"
+        >
           Youtube
         </Link>
-        <Link href="/" className="hover:text-white">
+        <Link
+          href="https://www.x.com/"
+          target="_blank"
+          className="hover:text-white"
+        >
           X
         </Link>
       </section>

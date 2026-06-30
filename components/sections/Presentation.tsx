@@ -22,7 +22,7 @@ const Presentation = () => {
         <h2 className="text-5xl lg:text-6xl whitespace-nowrap font-medium">
           ClothingCo.
         </h2>
-        <p>
+        <p className="text-stone-600 dark:text-stone-400">
           We design clean, versatile clothing that{" "}
           <strong className="font-semibold">empowers </strong>
           your everyday look.
@@ -30,7 +30,7 @@ const Presentation = () => {
         <h3 className="text-2xl lg:text-4xl mt-2 font-medium">
           Express yourself through fashion
         </h3>
-        <p>
+        <p className="text-stone-600 dark:text-stone-400">
           Our passionate fashion team empowers our customers to use fashion as
           expression by inspiring them with a diverse range of brands and
           styles.

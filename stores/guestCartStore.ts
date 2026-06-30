@@ -113,7 +113,7 @@ export const useGuestCartStore = create<GuestCartStore>()(
     }),
     {
       name: "guest-cart",
-      storage: createJSONStorage(() => sessionStorage), // swap to localStorage if you prefer persistence
+      storage: createJSONStorage(() => sessionStorage),
     },
   ),
 );

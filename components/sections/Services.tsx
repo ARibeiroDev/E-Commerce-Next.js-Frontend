@@ -2,7 +2,7 @@ import { CreditCard, Handshake, Headphones, Truck } from "lucide-react";
 
 const Services = () => {
   return (
-    <section className="px-[5vw] lg:px-[10vw] grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6 my-12">
+    <section className="px-[5vw] lg:px-[10vw] grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6 my-12">
       <div className="flex items-center gap-4">
         <Truck size={35} />
         <div>

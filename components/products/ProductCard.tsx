@@ -109,7 +109,7 @@ const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div
       key={product.id}
-      className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col"
+      className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col max-w-75"
     >
       {/* Badges: Out of Sotck or Discount */}
       {isGlobalOutOfStock ? (
@@ -166,7 +166,7 @@ const ProductCard = ({ product }: { product: Product }) => {
             <span>Size</span>
             <select
               value={selectedSize}
-              id="sizes"
+              id={`${product.slug}-size`}
               className="ring-1 ring-gray-300 rounded-md px-2 py-1 bg-transparent dark:bg-stone-700 text-stone-900 dark:text-white cursor-pointer"
               onChange={(e) => setSelectedSize(e.target.value)}
             >

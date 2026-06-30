@@ -47,7 +47,7 @@ const Header = () => {
       {/* Logo */}
       <Link
         href="/"
-        className="hidden sm:block md:text-xl uppercase tracking-wider"
+        className="sr-only sm:not-sr-only md:text-xl uppercase tracking-wider"
       >
         <h1>ClothingCo.</h1>
       </Link>

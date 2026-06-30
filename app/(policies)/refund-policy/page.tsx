@@ -43,7 +43,7 @@ const RefundPolicyPage = () => {
         <p>
           Once your return is received and inspected, we will notify you of the
           approval or rejection of your refund. If approved, your refund will be
-          processed to your original payment method within 5–10 business days.
+          processed to your original payment method within 5-10 business days.
         </p>
       </section>
 
@@ -51,7 +51,11 @@ const RefundPolicyPage = () => {
         <h3 className="text-xl font-semibold mt-4">4. Exchanges</h3>
         <p>
           We only replace items if they are defective or damaged. If you need to
-          exchange an item, please contact our customer support for assistance.
+          exchange an item, please{" "}
+          <Link href="/contact" className="underline text-blue-600">
+            contact
+          </Link>{" "}
+          our customer support for assistance.
         </p>
       </section>
 
@@ -65,8 +69,11 @@ const RefundPolicyPage = () => {
       </section>
 
       <p className=" mt-6">
-        For more details or to initiate a return, please contact our customer
-        support. You may also want to review our{" "}
+        For more details or to initiate a return, please{" "}
+        <Link href="/contact" className="underline text-blue-600">
+          contact
+        </Link>{" "}
+        our customer support. You may also want to review our{" "}
         <Link href="/terms-and-conditions" className="underline text-blue-600">
           Terms & Conditions
         </Link>{" "}

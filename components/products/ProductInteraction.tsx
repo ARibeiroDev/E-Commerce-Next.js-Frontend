@@ -365,12 +365,13 @@ const ProductInteraction = ({
           type="button"
           disabled={quantity <= 1 || isOutOfStock}
           onClick={() => handleQuantityChange("decrement")}
-          className="w-10 h-10 rounded-l-md border cursor-pointer"
+          className="w-10 h-10 rounded-l-md border disabled:opacity-40 cursor-pointer"
         >
           -
         </button>
 
         <input
+          id="quantity"
           type="number"
           value={maxStock === 0 ? 0 : quantity}
           disabled={isOutOfStock || maxStock === 0}

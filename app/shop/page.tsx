@@ -110,7 +110,7 @@ const ShopPage = () => {
       />
 
       {isLoading && (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-6 mt-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 mt-4">
           {Array.from({ length: limit }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}

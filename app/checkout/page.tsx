@@ -115,8 +115,7 @@ const CheckoutPage = () => {
           setIsOrderExpired(true);
         } else {
           setPendingOrder(freshOrder);
-          // Auto-sync step to 3 when resuming to ensure the UI renders correctly
-          // even if local storage `step` was wiped/corrupted
+          // Auto-sync step to 3 when resuming to ensure the UI renders correctly even if local storage `step` was wiped/corrupted
           if (step !== 3) {
             setStep(3);
           }

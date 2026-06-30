@@ -9,7 +9,7 @@ const CartPage = () => {
   const { items, clearCart, updateCartItem, removeCartItem } = useCart();
 
   if (items.length === 0)
-    return <p className="flex-1 text-center mt-10">Your cart is empty.</p>;
+    return <p className="flex-1 text-center my-10">Your cart is empty.</p>;
 
   const totalPrice = items.reduce((total, item) => {
     return total + Number(item.finalPrice) * item.quantity;

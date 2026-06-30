@@ -69,7 +69,11 @@ export const useCheckoutStore = create<CheckoutStore>()(
 
       resumePendingCheckout: (order) =>
         set({
-          step: 3,
+          step: (get().shippingConfirmed
+            ? 3
+            : get().reviewConfirmed
+              ? 2
+              : 1) as CheckoutStep,
           reviewConfirmed: true,
           shippingConfirmed: true,
           pendingOrder: order,

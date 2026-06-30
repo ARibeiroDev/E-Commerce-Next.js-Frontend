@@ -90,26 +90,26 @@ This project is actively evolving.
 - Admin Dashboard
 - User Profile/Dashboard
 - Checkout flow
+- User/Admin order management
 
 ### In Progress
 
 - UI improvements and refactoring
 - Image optimization (Cloudinary integration planned)
-- User/Admin order management
 
 ---
 
 ## Live Demo
 
-Coming soon...
+[LIVE DEMO](https://clothinco.onrender.com)
 
 ---
 
 ## Known Limitations
 
 - Images currently served directly from backend (no CDN yet)
-- Email service provider needs replacement due to trial api key expiration
-- Checkout/payment flow not implemented yet
+- Email service provider only sends email to account owner, limited feature of the free tier without dedicated domain
+- Checkout/payment service not implemented (simulation only)
 
 ---
 
