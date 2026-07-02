@@ -55,8 +55,13 @@ const Pagination = ({
   const pageNumbers = getPageNumbers();
 
   return (
-    <section className="flex gap-2 justify-center flex-wrap my-4">
+    <nav
+      aria-label="Pagination"
+      className="flex gap-2 justify-center flex-wrap my-4"
+    >
       <button
+        type="button"
+        aria-label="Previous Page"
         className={
           hasPreviousPage
             ? "border rounded-lg p-1 sm:p-2 cursor-pointer"
@@ -74,6 +79,7 @@ const Pagination = ({
           return (
             <span
               key={`ellipsis-${index}`}
+              aria-hidden="true"
               className="px-2 sm:px-4 py-2 font-medium text-sm flex items-center justify-center"
             >
               ...
@@ -81,15 +87,22 @@ const Pagination = ({
           );
         }
 
+        const isActive = currentPage === page;
+
         return (
           <button
+            type="button"
             key={`page-${page}`}
             className={
-              currentPage === page
+              isActive
                 ? "font-bold dark:bg-gray-200 bg-stone-800 dark:text-stone-800 text-gray-200 py-2 px-2 sm:px-4 border rounded-lg cursor-pointer transition-all"
                 : "border rounded-lg py-2 px-2 sm:px-4 cursor-pointer"
             }
             onClick={() => onPageChange(page as number)}
+            aria-label={
+              isActive ? `Current Page, Page ${page}` : `Go to Page ${page}`
+            }
+            aria-current={isActive ? "page" : undefined}
           >
             {page}
           </button>
@@ -97,6 +110,8 @@ const Pagination = ({
       })}
 
       <button
+        type="button"
+        aria-label="Next Page"
         className={
           hasNextPage
             ? "border rounded-lg p-1 sm:p-2 cursor-pointer"
@@ -107,7 +122,7 @@ const Pagination = ({
       >
         Next
       </button>
-    </section>
+    </nav>
   );
 };
 

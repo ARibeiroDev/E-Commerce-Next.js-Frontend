@@ -1,6 +1,9 @@
 const ProductSkeleton = () => {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:gap-12 my-8 bg-gray-200 dark:bg-stone-800 rounded-md p-4 animate-pulse">
+    <div
+      aria-hidden="true"
+      className="flex flex-col gap-4 md:flex-row md:gap-12 my-8 bg-gray-200 dark:bg-stone-800 rounded-md p-4 animate-pulse"
+    >
       <div className="w-full lg:w-5/12 relative aspect-square bg-gray-300 dark:bg-stone-700" />
       <div className="flex flex-col bg-gray-300 dark:bg-stone-700">
         <div className="w-full flex-1 lg:w-7/12 flex flex-col gap-4">

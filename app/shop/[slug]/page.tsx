@@ -1,42 +1,64 @@
-import ProductInteraction from "@/components/products/ProductInteraction";
-import ProductSkeleton from "@/components/products/ProductSkeleton";
-import BackButton from "@/components/ui/BackButton";
-import { getProductBySlug } from "@/lib/api/products";
-import { Product } from "@/types/product";
-import { getDiscount } from "@/utils/discountedPrice";
 import { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
+import ProductInteraction from "@/components/products/ProductInteraction";
+import ProductSkeleton from "@/components/products/ProductSkeleton";
+import BackButton from "@/components/ui/BackButton";
+import { getProductBySlug, getProducts } from "@/lib/api/products";
+import { Product } from "@/types/product";
+import { getDiscount } from "@/utils/discountedPrice";
+import { notFound } from "next/navigation";
+
+type PageProps = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ size?: string; color?: string }>;
+};
 
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  try {
+    const product = await getProductBySlug(slug);
+    if (!product || product.isArchived) return { title: "Product Not Found" };
 
-  return {
-    title: product.title,
-    description: product.description,
-  };
+    return {
+      title: `${product.title}`,
+      description:
+        product.description || "Quality Clothing at Affordable Prices",
+    };
+  } catch (error: unknown) {
+    return { title: "Shop" };
+  }
 }
 
-const ProductPage = async ({
-  params,
-  searchParams,
-}: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ size?: string; color?: string }>;
-}) => {
-  const { slug } = await params;
-  const { size, color } = await searchParams;
+// Pre-generation of static paths for products to enhance performance and SEO
+export const generateStaticParams = async () => {
+  try {
+    const { data: products } = await getProducts({ limit: 30, page: 1 });
+    return products.map((product) => ({
+      slug: product.slug,
+    }));
+  } catch {
+    return [];
+  }
+};
 
+type ContentProps = {
+  slug: string;
+  selectedSize: string;
+  selectedColor: string;
+};
+
+const ProductDetailContent = async ({
+  slug,
+  selectedSize,
+  selectedColor,
+}: ContentProps) => {
   const product: Product = await getProductBySlug(slug);
 
-  const selectedColor = color || "";
-  const selectedSize = size || "";
+  if (!product || product.isArchived) return notFound();
 
   const selectedVariant = product.variants.find(
     (v) => v.size === selectedSize && v.color === selectedColor,
@@ -45,7 +67,8 @@ const ProductPage = async ({
   // Base product price
   const basePrice = Number(product.basePrice);
 
-  // Global max discount for initial selection
+  // If a variant is selected, use its discount. Otherwise, calculate max discount for badge.
+  const activeDiscount = selectedVariant?.discountPercentage || 0;
   const maxDiscount = product.variants.reduce(
     (max, v) =>
       v.discountPercentage && v.discountPercentage > max
@@ -54,56 +77,93 @@ const ProductPage = async ({
     0,
   );
 
-  // Selected variant discount
-  const discount = selectedVariant
-    ? (selectedVariant.discountPercentage ?? 0)
-    : maxDiscount;
+  const currentPrice =
+    activeDiscount > 0 ? getDiscount(basePrice, activeDiscount) : basePrice;
+  const hasSelectedDiscount = activeDiscount > 0;
+  const hasAnyDiscount = maxDiscount > 0;
 
-  // Calculate final price
-  const finalPrice = getDiscount(basePrice, discount);
+  // SEO structured data for Google Merchant/Rich Results
+  // Modern E-Commerce must-have
+  const jsonLd = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.title,
+    image: product.images?.[0],
+    description: product.description,
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "USD",
+      price: Number(currentPrice).toFixed(2),
+      availability: product.variants.some((v) => v.stock > 0)
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
 
   return (
-    <main className="flex-1 px-[5vw] lg:px-[10vw] flex flex-col">
-      <Suspense fallback={<ProductSkeleton />}>
-        <article className="flex flex-col gap-4 md:flex-row md:gap-12 my-8 bg-gray-200 dark:bg-stone-800 rounded-md p-4 transition-all duration-100 ease-in-out">
-          <figure className="w-full md:max-w-5/12 transition-all duration-100 ease-in-out relative aspect-square">
-            <Image
-              src={product.images[0]}
-              alt={product.title}
-              fill
-              sizes="100%"
-              className="object-cover rounded-md"
-            />
-            <figcaption className="sr-only">{product.title}</figcaption>
-          </figure>
-          <div className="flex flex-col">
-            <section className="w-full flex-1 xl:w-7/12 transition-all duration-100 ease-in-out flex flex-col gap-4">
-              <h2 className="text-3xl font-medium">{product.title}</h2>
-              <p className="text-stone-600 dark:text-gray-300">
-                {product.description}
-              </p>
-              <h3 className="text-xl sm:text-2xl font-semibold">
-                {discount ? (
-                  <>
-                    <span className="line-through text-gray-400">
-                      ${basePrice.toFixed(2)}
-                    </span>
-                    <span className="text-green-600 mx-2">${finalPrice}</span>
-                    <span className="bg-red-500 text-white px-2 rounded">
-                      -{discount}%
-                    </span>
-                  </>
-                ) : (
-                  <>${basePrice.toFixed(2)}</>
-                )}
-              </h3>
-              <ProductInteraction
-                product={product}
-                selectedSize={selectedSize}
-                selectedColor={selectedColor}
-              />
-            </section>
-            <section className="flex items-center gap-2 mt-4">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 my-4 items-start">
+        <figure className="w-full relative aspect-square bg-stone-100 dark:bg-stone-800 rounded-xl overflow-hidden shadow-sm">
+          <Image
+            src={product.images?.[0]}
+            alt={product.title}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover"
+            priority
+            draggable="false"
+          />
+          <figcaption className="sr-only">{product.title}</figcaption>
+          {hasSelectedDiscount ? (
+            <span className="absolute top-4 left-4 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-md uppercase tracking-wider">
+              {activeDiscount}% OFF
+            </span>
+          ) : hasAnyDiscount ? (
+            <span className="absolute top-4 left-4 bg-stone-900 dark:bg-stone-100 dark:text-stone-900 text-white text-xs font-bold px-3 py-1.5 rounded-md uppercase tracking-wider">
+              Up to {maxDiscount}% OFF
+            </span>
+          ) : null}
+        </figure>
+        <div className="flex flex-col gap-6">
+          <section>
+            <h2 className="text-3xl lg:text-4xl font-semibold tracking-tight">
+              {product.title}
+            </h2>
+            <div className="flex items-baseline gap-3 mt-3">
+              <span className="text-2xl font-bold text-stone-900 dark:text-gray-100">
+                ${Number(currentPrice).toFixed(2)}
+              </span>
+              {hasSelectedDiscount && (
+                <span className="text-lg text-stone-400 line-through">
+                  ${basePrice.toFixed(2)}
+                </span>
+              )}
+            </div>
+          </section>
+
+          <hr className="border-stone-200 dark:border-stone-700" />
+
+          <p className="text-stone-600 dark:text-stone-300 leading-relaxed text-sm md:text-base">
+            {product.description}
+          </p>
+          <ProductInteraction
+            product={product}
+            selectedSize={selectedSize}
+            selectedColor={selectedColor}
+          />
+
+          <div className="mt-6 p-4 rounded-xl bg-stone-50 dark:bg-stone-800/50 border border-stone-200/60 dark:border-stone-700">
+            <section
+              className="flex items-center gap-3"
+              aria-label="Accepted payment methods"
+            >
+              <span className="text-xs font-medium uppercase tracking-wider text-stone-500 dark:text-stone-400">
+                Secured Checkout:
+              </span>
               <Image
                 src="https://cdn.brandfetch.io/id-Wd4a4TS/theme/dark/id31tBizMM.svg?c=1bxid64Mup7aczewSAYMX&t=1727787879793"
                 alt="Paypal"
@@ -126,35 +186,53 @@ const ProductPage = async ({
                 className="dark:invert-50 aspect-auto"
               />
             </section>
-            <p className="text-stone-600 dark:text-gray-300 text-xs mt-4">
-              By clicking Pay Now, you agree to ClothingCo&apos;s{" "}
+            <p className="text-stone-500 dark:text-stone-400 text-[11px] leading-normal mt-3">
+              By executing purchases, you authorize transactions under
+              ClothingCo&apos;s{" "}
               <Link
                 href="/terms-and-conditions"
-                className="underline hover:brightness-80"
+                className="underline hover:text-stone-900 dark:hover:text-white transition-colors"
               >
                 Terms & Conditions
               </Link>{" "}
               and{" "}
               <Link
                 href="/privacy-policy"
-                className="underline hover:brightness-80"
+                className="underline hover:text-stone-900 dark:hover:text-white transition-colors"
               >
                 Privacy Policy
               </Link>
-              . You authorize us to charge your selected payment method for the
-              total amount shown. All sales are subject to our return and{" "}
+              . Conversions are safeguarded under our{" "}
               <Link
                 href="/refund-policy"
-                className="underline hover:brightness-80"
+                className="underline hover:text-stone-900 dark:hover:text-white transition-colors"
               >
-                Refund Policies
+                Refund Policy
               </Link>
               .
             </p>
           </div>
-        </article>
+        </div>
+      </article>
+    </>
+  );
+};
+
+const ProductPage = async ({ params, searchParams }: PageProps) => {
+  const { slug } = await params;
+  const { size, color } = await searchParams;
+
+  return (
+    <main className="flex-1 px-[5vw] lg:px-[10vw] animate-appear flex flex-col min-h-screen">
+      <BackButton styles="cursor-pointer flex items-center gap-1 my-4 self-start text-stone-600 dark:text-gray-400 hover:text-stone-900 dark:hover:text-white transition-colors" />
+
+      <Suspense fallback={<ProductSkeleton />}>
+        <ProductDetailContent
+          slug={slug}
+          selectedSize={size || ""}
+          selectedColor={color || ""}
+        />
       </Suspense>
-      <BackButton styles="flex items-center gap-1 my-4 self-end cursor-pointer" />
     </main>
   );
 };

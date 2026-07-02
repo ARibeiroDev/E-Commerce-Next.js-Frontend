@@ -26,6 +26,7 @@ import {
   StockConflict,
 } from "@/utils/extractConflictError";
 import CheckoutConflictModal from "@/components/checkout/CheckoutConflictModal";
+import CheckoutSummary from "@/components/checkout/CheckoutSummary";
 
 const SHIPPING_THRESHOLD = 100;
 const SHIPPING_FEE = 15;
@@ -61,7 +62,7 @@ const CheckoutPage = () => {
   // Auth guard
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.replace("/login?redirect=/checkout");
+      router.replace("/login");
     }
   }, [isAuthenticated, isLoading, router]);
 
@@ -225,38 +226,21 @@ const CheckoutPage = () => {
 
   if (isLoading || !hasHydrated) {
     return (
-      <main className="flex-1 flex items-center justify-center">
-        <p>Loading checkout...</p>
+      <main className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <div aria-busy="true" className="animate-pulse font-medium">
+          Loading checkout...
+        </div>
       </main>
     );
   }
 
   if (!hasActiveCheckout && items.length === 0) {
     return (
-      <main className="flex-1 flex items-center justify-center">
-        <p>Your cart is empty.</p>
+      <main className="flex-1 flex items-center justify-center min-h-[50vh]">
+        <p className="font-medium">Your cart is empty.</p>
       </main>
     );
   }
-
-  // Pre-Order calculations
-  const subtotal = items.reduce(
-    (acc, item) => acc + item.finalPrice * item.quantity,
-    0,
-  );
-  const cartShippingFee = subtotal >= SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
-  const cartTotal = subtotal + cartShippingFee;
-
-  // Post-Order calculations
-  const orderItemsSubtotal = pendingOrder
-    ? pendingOrder.items.reduce(
-        (acc, item) => acc + Number(item.priceAtPurchase) * item.quantity,
-        0,
-      )
-    : 0;
-  const orderShippingFee = pendingOrder
-    ? Number(pendingOrder.total) - orderItemsSubtotal
-    : 0;
 
   return (
     <main className="flex-1 max-w-7xl mx-auto p-6 flex flex-col gap-10">
@@ -265,7 +249,7 @@ const CheckoutPage = () => {
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <section className="lg:col-span-2 border rounded-xl p-6">
+        <section className="lg:col-span-2 border border-gray-300 dark:border-stone-700 rounded-xl p-6 bg-white dark:bg-stone-900">
           {step === 1 && (
             <div className="flex flex-col gap-8">
               <CheckoutReviewStep />
@@ -317,58 +301,12 @@ const CheckoutPage = () => {
           )}
         </section>
 
-        <aside className="border rounded-xl p-6 h-fit flex flex-col gap-6">
-          <h2 className="text-xl font-semibold">Order Summary</h2>
-
-          {pendingOrder ? (
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>${orderItemsSubtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Shipping</span>
-                <span>
-                  {orderShippingFee === 0
-                    ? "Free"
-                    : `$${orderShippingFee.toFixed(2)}`}
-                </span>
-              </div>
-              <div className="flex justify-between font-semibold text-lg border-t pt-3 mt-1">
-                <span>Total</span>
-                <span>${Number(pendingOrder.total).toFixed(2)}</span>
-              </div>
-              <p className="text-sm text-gray-500 mt-2">
-                Total locked at order creation.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Shipping</span>
-                <span>
-                  {cartShippingFee === 0
-                    ? "Free"
-                    : `$${cartShippingFee.toFixed(2)}`}
-                </span>
-              </div>
-              <div className="flex justify-between font-semibold text-lg border-t pt-3 mt-1">
-                <span>Total</span>
-                <span>${cartTotal.toFixed(2)}</span>
-              </div>
-              {cartShippingFee > 0 && (
-                <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                  Add ${(SHIPPING_THRESHOLD - subtotal).toFixed(2)} more for
-                  free shipping!
-                </p>
-              )}
-            </div>
-          )}
-        </aside>
+        <CheckoutSummary
+          items={items}
+          pendingOrder={pendingOrder}
+          shippingThreshold={SHIPPING_THRESHOLD}
+          shippingFee={SHIPPING_FEE}
+        />
       </div>
 
       {conflictData && (

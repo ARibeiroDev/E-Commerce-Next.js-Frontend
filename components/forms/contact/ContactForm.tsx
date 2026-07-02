@@ -52,12 +52,18 @@ export const ContactForm = () => {
           {...register("fullName")}
           type="text"
           id="fullName"
+          autoComplete="name"
           disabled={isSubmitting}
+          aria-invalid={!!errors.fullName}
+          aria-describedby={errors.fullName ? "fullName-error" : undefined}
           className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400"
           placeholder="John Doe"
         />
         {errors.fullName && (
-          <span className="text-red-500 text-xs font-semibold">
+          <span
+            id="fullName-error"
+            className="text-red-500 text-xs font-semibold"
+          >
             {errors.fullName.message}
           </span>
         )}
@@ -71,12 +77,15 @@ export const ContactForm = () => {
           {...register("email")}
           type="email"
           id="email"
+          autoComplete="email"
           disabled={isSubmitting}
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
           className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400"
           placeholder="john@example.com"
         />
         {errors.email && (
-          <span className="text-red-500 text-xs font-semibold">
+          <span id="email-error" className="text-red-500 text-xs font-semibold">
             {errors.email.message}
           </span>
         )}
@@ -91,11 +100,16 @@ export const ContactForm = () => {
           id="message"
           rows={5}
           disabled={isSubmitting}
-          className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400"
+          aria-invalid={!!errors.message}
+          aria-describedby={errors.message ? "message-error" : undefined}
+          className="border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400 min-h-30"
           placeholder="How can we help you?"
         ></textarea>
         {errors.message && (
-          <span className="text-red-500 text-xs font-semibold">
+          <span
+            id="message-error"
+            className="text-red-500 text-xs font-semibold"
+          >
             {errors.message.message}
           </span>
         )}

@@ -112,7 +112,7 @@ const ProductInteraction = ({
       );
     }
 
-    router.push(`${pathname}?${params.toString()}`, {
+    router.replace(`${pathname}?${params.toString()}`, {
       scroll: false,
     });
   };
@@ -223,39 +223,19 @@ const ProductInteraction = ({
     router.push("/checkout");
   };
 
-  // Early return pattern: If all variants are out of stock or archived
-  if (isArchived) {
-    return (
-      <section className="flex flex-col gap-6 mt-4">
-        <div className="bg-gray-200 dark:bg-stone-700/50 p-4 rounded-md border border-gray-300 dark:border-stone-600 flex items-center justify-center">
-          <span className="font-medium text-stone-600 dark:text-gray-300">
-            This product is currently archived
-          </span>
-        </div>
-        <div className="flex flex-col gap-3 mt-2">
-          <button
-            disabled
-            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
-          >
-            Add to cart
-          </button>
-          <button
-            disabled
-            className="w-full py-3 rounded-md bg-gray-300 dark:bg-stone-700 text-stone-500 dark:text-gray-500 cursor-not-allowed transition-all"
-          >
-            Buy now
-          </button>
-        </div>
-      </section>
-    );
-  }
+  const unavailableReason = isArchived
+    ? "This product is currently archived and cannot be purchased."
+    : isGlobalOutOfStock
+      ? "This product is currently out of stock."
+      : null;
 
-  if (isGlobalOutOfStock) {
+  // Early return pattern: If all variants are out of stock or archived
+  if (unavailableReason) {
     return (
       <section className="flex flex-col gap-6 mt-4">
         <div className="bg-gray-200 dark:bg-stone-700/50 p-4 rounded-md border border-gray-300 dark:border-stone-600 flex items-center justify-center">
           <span className="font-medium text-stone-600 dark:text-gray-300">
-            This product is currently out of stock
+            {unavailableReason}
           </span>
         </div>
         <div className="flex flex-col gap-3 mt-2">
@@ -279,8 +259,8 @@ const ProductInteraction = ({
   return (
     <section className="flex flex-col gap-6 mt-4">
       {/* Colors */}
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium">Color</span>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Color</legend>
 
         <div className="flex items-center gap-2 flex-wrap">
           {colors.map((color) => {
@@ -289,8 +269,10 @@ const ProductInteraction = ({
 
             return (
               <button
+                type="button"
                 key={color}
                 disabled={disabled}
+                aria-pressed={isSelected}
                 onClick={() => handleTypeChange("color", color)}
                 className={`
                   px-4 py-2 rounded-md border transition-all duration-200
@@ -311,11 +293,11 @@ const ProductInteraction = ({
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       {/* Sizes */}
-      <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium">Size</span>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Size</legend>
 
         <div className="flex items-center gap-2 flex-wrap">
           {sizes.map((size) => {
@@ -324,9 +306,11 @@ const ProductInteraction = ({
 
             return (
               <button
+                type="button"
                 key={size}
                 disabled={disabled}
                 onClick={() => handleTypeChange("size", size)}
+                aria-pressed={isSelected}
                 className={`
                   px-4 py-2 rounded-md border transition-all duration-200
                   ${
@@ -346,7 +330,7 @@ const ProductInteraction = ({
             );
           })}
         </div>
-      </div>
+      </fieldset>
 
       {/* Stock */}
       <p className="text-sm text-stone-500 dark:text-gray-400">

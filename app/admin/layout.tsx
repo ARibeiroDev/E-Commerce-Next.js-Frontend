@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
   const linkClass = (path: string) =>
-    `px-3 py-2 rounded-md sm:rounded-r-none text-sm font-medium transition-colors ${pathname.startsWith(path) ? "bg-stone-800 text-gray-200 dark:bg-gray-300 dark:text-stone-900 font-semibold" : "hover:bg-gray-200 dark:hover:bg-stone-700"}`;
+    `px-3 py-2 rounded-md md:rounded-r-none text-sm font-medium transition-colors ${pathname.startsWith(path) ? "bg-stone-800 text-gray-200 dark:bg-gray-300 dark:text-stone-900 font-semibold" : "hover:bg-gray-200 dark:hover:bg-stone-700"}`;
 
   return (
     <AdminGuard>

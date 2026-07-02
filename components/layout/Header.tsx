@@ -42,6 +42,7 @@ const Header = () => {
         onNavigate={() => setOpen(false)} // Closes the mobile menu upon click
         className={`z-10 flex md:hidden flex-col items-center justify-evenly uppercase absolute top-18 left-0 transition-all duration-500 ${open ? "translate-x-0" : "-translate-x-[200%]"} w-full h-[calc(100vh-4.5rem)] bg-gray-200/90 dark:bg-stone-900/95`}
         mobile
+        aria-label="Mobile navigation"
       />
 
       {/* Logo */}

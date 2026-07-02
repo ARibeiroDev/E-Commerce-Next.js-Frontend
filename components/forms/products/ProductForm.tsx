@@ -152,6 +152,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         );
 
         await revalidateProduct(initialData.slug);
+        await revalidateProducts();
         setSuccess("Product successfully updated!");
       } else {
         // Create mode logic

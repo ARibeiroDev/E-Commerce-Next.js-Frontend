@@ -43,9 +43,12 @@ const useCart = () => {
         sku: item.sku,
         title: item.productTitle,
         image: item.image,
-        basePrice: item.discountPercentage
-          ? item.price / (1 - item.discountPercentage / 100)
-          : item.price,
+        basePrice:
+          item.discountPercentage && item.discountPercentage < 100
+            ? Number(
+                (item.price / (1 - item.discountPercentage / 100)).toFixed(2),
+              )
+            : item.price,
         finalPrice: item.price,
         discountPercentage: item.discountPercentage,
         slug: item.slug,
@@ -61,13 +64,18 @@ const useCart = () => {
 
     addToCart: async (item: GuestCartItem) => {
       if (isAuthenticated) {
-        await addUserItem(item.sku, item.quantity);
-
-        return { success: true };
+        try {
+          await addUserItem(item.sku, item.quantity);
+          return { success: true };
+        } catch (error: unknown) {
+          console.error(
+            error instanceof Error ? error.message : "An error occurred",
+          );
+          return { success: false };
+        }
       }
 
       const success = addGuestItem(item);
-
       return { success };
     },
 

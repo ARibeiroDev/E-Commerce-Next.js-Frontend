@@ -34,11 +34,17 @@ const ShopPage = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      setIsLoading(true);
+      setError(null);
       try {
         const data = await getCategories();
         setCategories(data);
-      } catch (err) {
-        console.log(err);
+      } catch (error: unknown) {
+        setError(
+          error instanceof Error ? error.message : "Something went wrong",
+        );
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -61,8 +67,8 @@ const ShopPage = () => {
 
       setProducts(response.data);
       setMeta(response.meta);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "Something went wrong");
     } finally {
       setIsLoading(false);
     }
@@ -78,21 +84,20 @@ const ShopPage = () => {
   ) => {
     const params = new URLSearchParams(searchParams.toString());
 
-    if (key === "sort" && typeof value === "object") {
-      params.set("sortBy", value.sortBy);
-      params.set("orderBy", value.orderBy);
-    } else {
-      params.set(key, value.toString());
-    }
-
     // Reset page when filters change
     if (key !== "page") params.set("page", "1");
 
-    // Remove empty query params
-    if (!value) {
-      params.delete(key);
+    if (key === "sort" && typeof value === "object") {
+      params.set("sortBy", value.sortBy);
+      params.set("orderBy", value.orderBy);
+      params.delete("sort"); // Remove the old sort param if it exists
     } else {
-      params.set(key, value.toString());
+      // Remove empty query params
+      if (!value) {
+        params.delete(key);
+      } else {
+        params.set(key, value.toString());
+      }
     }
 
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
@@ -100,6 +105,8 @@ const ShopPage = () => {
 
   return (
     <main className="flex-1 px-[5vw] lg:px-[10vw] py-4 animate-appear">
+      <h2 className="sr-only">Shop</h2>
+
       <FiltersBar
         search={search}
         selectedCategory={categoryId}
@@ -110,23 +117,32 @@ const ShopPage = () => {
       />
 
       {isLoading && (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 mt-4">
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label="Loading products"
+          className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-6 mt-4"
+        >
           {Array.from({ length: limit }).map((_, i) => (
             <ProductCardSkeleton key={i} />
           ))}
         </div>
       )}
 
-      {error && <div className="text-red-500">{error}</div>}
+      {error && (
+        <div role="alert" className="text-red-500">
+          {error}
+        </div>
+      )}
 
       {!isLoading && !error && (
-        <>
+        <div role="region" aria-live="polite" aria-label="Product results">
           {products.length > 0 ? (
             <ProductGrid products={products} />
           ) : (
             <div className="text-center py-8">No products found</div>
           )}
-        </>
+        </div>
       )}
 
       {meta && products.length > 0 && (

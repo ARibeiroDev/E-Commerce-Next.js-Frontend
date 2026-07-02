@@ -42,16 +42,22 @@ const OrderExpirationTimer = ({ expiresAt, onExpire }: Props) => {
   }, [expiresAt, onExpire]);
 
   return (
-    <header className="bg-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-3 rounded-md text-sm">
+    <div
+      role="timer"
+      aria-live="polite"
+      className="bg-yellow-300 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 p-3 rounded-md text-sm"
+    >
       {expired ? (
         <span>Your order has expired</span>
       ) : (
         <span>
           Your order is reserved for{" "}
-          <span className="font-semibold">{timeLeft}</span>
+          <time dateTime={expiresAt} className="font-semibold tracking-widest">
+            {timeLeft}
+          </time>
         </span>
       )}
-    </header>
+    </div>
   );
 };
 

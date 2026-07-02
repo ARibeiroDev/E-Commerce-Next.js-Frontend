@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/authStore";
 import { getOrderById } from "@/lib/api/orders";
 import Loading from "@/app/loading";
 
-export default function CheckoutSuccessPage() {
+const SuccessPageContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get("orderId");
@@ -57,7 +57,11 @@ export default function CheckoutSuccessPage() {
   if (isVerifying) {
     return (
       <main className="flex-1 flex flex-col items-center justify-center min-h-[50vh] p-6">
-        <div className="animate-pulse flex flex-col items-center space-y-4">
+        <div
+          role="status"
+          aria-live="polite"
+          className="animate-pulse flex flex-col items-center space-y-4"
+        >
           <Loading />
           <p className="text-gray-500 font-medium text-sm">
             Verifying your order...
@@ -77,14 +81,20 @@ export default function CheckoutSuccessPage() {
       <header className="text-center space-y-2">
         <h2 className="text-2xl font-bold">Payment Successful</h2>
 
-        <p className="text-gray-600">Your order has been confirmed.</p>
+        <p className="text-gray-600 dark:text-stone-400">
+          Your order has been confirmed.
+        </p>
       </header>
 
       {orderId && (
-        <section className="bg-gray-100 dark:bg-stone-800 p-4 rounded-md text-sm">
-          <p className="text-gray-500">Your order ID:</p>
-          <p className="font-mono font-semibold">{orderId}</p>
-        </section>
+        <dl className="bg-gray-100 dark:bg-stone-800 border border-gray-200 dark:border-stone-700 p-5 rounded-xl text-sm w-full max-w-150 text-center shadow-sm">
+          <dt className="text-stone-500 dark:text-stone-400 font-medium mb-1">
+            Your Order ID
+          </dt>
+          <dd className="font-mono font-bold text-base text-stone-900 dark:text-white select-all">
+            {orderId}
+          </dd>
+        </dl>
       )}
 
       <div className="flex gap-4">
@@ -100,5 +110,27 @@ export default function CheckoutSuccessPage() {
         </Link>
       </div>
     </main>
+  );
+};
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex-1 flex flex-col items-center justify-center min-h-[50vh] p-6">
+          <div
+            role="status"
+            className="animate-pulse flex flex-col items-center space-y-4"
+          >
+            <Loading />
+            <p className="text-stone-500 dark:text-stone-400 font-medium text-sm">
+              Loading confirmation...
+            </p>
+          </div>
+        </main>
+      }
+    >
+      <SuccessPageContent />
+    </Suspense>
   );
 }

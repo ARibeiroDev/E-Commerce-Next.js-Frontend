@@ -1,15 +1,30 @@
 "use client";
 
+import CartItemCard from "@/components/cart/CartItemCard";
 import useCart from "@/hooks/useCart";
-import { Trash } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 
 const CartPage = () => {
   const { items, clearCart, updateCartItem, removeCartItem } = useCart();
 
-  if (items.length === 0)
-    return <p className="flex-1 text-center my-10">Your cart is empty.</p>;
+  if (items.length === 0) {
+    return (
+      <main className="flex-1 flex flex-col items-center justify-center min-h-[50vh] p-6 animate-appear">
+        <h2 className="text-2xl font-bold text-stone-900 dark:text-white mb-2">
+          Your cart is empty
+        </h2>
+        <p className="text-center text-stone-600 dark:text-stone-400 mb-6">
+          Looks like you haven&apos;t added anything yet.
+        </p>
+        <Link
+          href="/shop"
+          className="bg-stone-900 border border-stone-900 dark:border-gray-100 text-gray-100 dark:bg-gray-100 dark:text-stone-900 px-6 py-3 rounded-lg font-medium hover:bg-transparent hover:text-stone-900 hover:dark:text-gray-100 transition-all duration-200"
+        >
+          Start Shopping
+        </Link>
+      </main>
+    );
+  }
 
   const totalPrice = items.reduce((total, item) => {
     return total + Number(item.finalPrice) * item.quantity;
@@ -19,72 +34,22 @@ const CartPage = () => {
     <main className="flex-1 max-w-3xl mx-auto p-6">
       <h2 className="text-3xl font-bold mb-6 text-center">Your Cart</h2>
 
-      <ul className="flex flex-col gap-4">
-        {items.map((item) => {
-          const finalPrice = Number(item.finalPrice);
-          return (
-            <li
-              key={item.sku}
-              className="flex-1 flex flex-col gap-4 sm:flex-row items-start sm:items-center justify-between bg-gray-200 dark:bg-stone-800 shadow rounded-lg p-4"
-            >
-              <Link href={`/shop/${item.slug}`}>
-                <Image
-                  src={item.image}
-                  alt="Product"
-                  width={100}
-                  height={100}
-                  className="object-cover rounded aspect-square self-center"
-                />
-              </Link>
-              <section className="flex-1 flex flex-col gap-1">
-                <h3 className="text-lg font-semibold">{item.title}</h3>
-
-                <p>
-                  Price: ${finalPrice.toFixed(2)}
-                  {item.discountPercentage && item.discountPercentage > 0 && (
-                    <span className="ml-2 text-green-600">
-                      {item.discountPercentage}% off
-                    </span>
-                  )}
-                </p>
-                <p className="text-sm">Size: {item.size}</p>
-                <p className="text-sm">Color: {item.color}</p>
-              </section>
-
-              <section className="w-full sm:w-auto flex justify-between gap-4 mt-3 sm:mt-0">
-                <div className="flex items-center">
-                  <button
-                    onClick={() => updateCartItem(item.sku, item.quantity - 1)}
-                    className="w-8 h-8 rounded-l-md border disabled:opacity-40 cursor-pointer"
-                    disabled={item.quantity <= 1}
-                  >
-                    -
-                  </button>
-                  <span className="w-14 h-8 text-center border bg-transparent flex items-center justify-center">
-                    {item.quantity}
-                  </span>
-                  <button
-                    onClick={() => updateCartItem(item.sku, item.quantity + 1)}
-                    className="w-8 h-8 rounded-r-md border disabled:opacity-40 cursor-pointer"
-                    disabled={item.quantity >= item.stock}
-                  >
-                    +
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => removeCartItem(item.sku)}
-                  className="p-2 bg-red-500 text-white hover:bg-red-600 rounded-md cursor-pointer"
-                >
-                  <Trash />
-                </button>
-              </section>
-            </li>
-          );
-        })}
+      <ul className="flex flex-col gap-2 mb-4">
+        {items.map((item) => (
+          <li
+            key={item.sku}
+            className="flex-1 flex flex-col gap-4 sm:flex-row items-start sm:items-center justify-between border border-gray-300 dark:border-stone-700 shadow-xs rounded-lg"
+          >
+            <CartItemCard
+              item={item}
+              onUpdate={updateCartItem}
+              onRemove={removeCartItem}
+            />
+          </li>
+        ))}
       </ul>
 
-      <section className="mt-6 flex flex-col gap-4 sm:flex-row sm:gap-0 justify-between items-start sm:items-center">
+      <footer className="pt-4 border-t border-gray-200 dark:border-stone-700 flex flex-col gap-4 sm:flex-row sm:gap-0 justify-between items-start sm:items-center">
         <span className="text-xl font-semibold">
           Total: ${totalPrice.toFixed(2)}
         </span>
@@ -97,11 +62,11 @@ const CartPage = () => {
 
         <Link
           href="/checkout"
-          className="px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:opacity-90 transition w-full sm:w-auto"
+          className="px-6 py-2 bg-black text-white dark:bg-white dark:text-black rounded hover:opacity-90 transition w-full sm:w-auto text-center"
         >
           Proceed to Checkout
         </Link>
-      </section>
+      </footer>
     </main>
   );
 };

@@ -94,26 +94,41 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
         onSubmit={handleSubmit(handleFakePayment)}
         className="flex flex-col gap-4"
       >
-        <div>
-          <label className="text-sm font-medium mb-1 block">Name on Card</label>
+        <fieldset>
+          <label
+            htmlFor="cardholderName"
+            className="text-sm font-medium mb-1 block"
+          >
+            Name on Card
+          </label>
           <input
+            id="cardholderName"
             type="text"
             placeholder="John Doe"
+            autoComplete="name"
+            aria-invalid={!!errors.cardholderName}
+            aria-describedby={
+              errors.cardholderName ? "cardholderName-error" : undefined
+            }
             disabled={loading || isExpired}
             {...register("cardholderName")}
             className="w-full border border-gray-300 dark:border-stone-700 p-3 rounded-md bg-transparent"
           />
           {errors.cardholderName && (
-            <p className="text-sm text-red-500 mt-1">
+            <p
+              id="cardholderName-error"
+              role="alert"
+              className="text-sm text-red-500 mt-1"
+            >
               {errors.cardholderName.message}
             </p>
           )}
-        </div>
+        </fieldset>
 
-        <div>
+        <fieldset>
           <label
-            className="text-sm font-medium mb-1 block"
             htmlFor="cardNumber"
+            className="text-sm font-medium mb-1 block"
           >
             Card Number
           </label>
@@ -121,19 +136,28 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
             id="cardNumber"
             type="text"
             placeholder="XXXX XXXX XXXX XXXX"
+            autoComplete="cc-number"
+            aria-invalid={!!errors.cardNumber}
+            aria-describedby={
+              errors.cardNumber ? "cardNumber-error" : undefined
+            }
             disabled={loading || isExpired}
             {...register("cardNumber")}
             className="w-full border border-gray-300 dark:border-stone-700 p-3 rounded-md bg-transparent"
           />
           {errors.cardNumber && (
-            <p className="text-sm text-red-500 mt-1">
+            <p
+              id="cardNumber-error"
+              role="alert"
+              className="text-sm text-red-500 mt-1"
+            >
               {errors.cardNumber.message}
             </p>
           )}
-        </div>
+        </fieldset>
 
         <div className="grid grid-cols-2 gap-4">
-          <div>
+          <fieldset>
             <label
               className="text-sm font-medium mb-1 block"
               htmlFor="expiryDate"
@@ -144,17 +168,26 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
               id="expiryDate"
               type="text"
               placeholder="MM/YY"
+              autoComplete="cc-exp"
+              aria-invalid={!!errors.expiryDate}
+              aria-describedby={
+                errors.expiryDate ? "expiryDate-error" : undefined
+              }
               disabled={loading || isExpired}
               {...register("expiryDate")}
               className="w-full border border-gray-300 dark:border-stone-700 p-3 rounded-md bg-transparent"
             />
             {errors.expiryDate && (
-              <p className="text-sm text-red-500 mt-1">
+              <p
+                id="expiryDate-error"
+                role="alert"
+                className="text-sm text-red-500 mt-1"
+              >
                 {errors.expiryDate.message}
               </p>
             )}
-          </div>
-          <div>
+          </fieldset>
+          <fieldset>
             <label className="text-sm font-medium mb-1 block" htmlFor="cvv">
               CVV
             </label>
@@ -162,14 +195,23 @@ const CheckoutPaymentStep = ({ order, isExpired, onExpire }: Props) => {
               id="cvv"
               type="text"
               placeholder="123"
+              autoComplete="cc-cvv"
+              aria-invalid={!!errors.cvv}
+              aria-describedby={errors.cvv ? "cvv-error" : undefined}
               disabled={loading || isExpired}
               {...register("cvv")}
               className="w-full border border-gray-300 dark:border-stone-700 p-3 rounded-md bg-transparent"
             />
             {errors.cvv && (
-              <p className="text-sm text-red-500 mt-1">{errors.cvv.message}</p>
+              <p
+                id="cvv-error"
+                role="alert"
+                className="text-sm text-red-500 mt-1"
+              >
+                {errors.cvv.message}
+              </p>
             )}
-          </div>
+          </fieldset>
         </div>
 
         <button

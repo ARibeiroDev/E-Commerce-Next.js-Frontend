@@ -21,7 +21,11 @@ const ContactPage = () => {
 
         <address className="flex flex-col gap-6 not-italic">
           <div className="flex items-center gap-4 p-6 rounded-xl bg-gray-200 dark:bg-stone-800">
-            <Mail size={24} className="text-stone-600 dark:text-stone-400" />
+            <Mail
+              size={24}
+              className="text-stone-600 dark:text-stone-400"
+              aria-hidden="true"
+            />
             <div>
               <h3 className="font-semibold text-lg">Email Us</h3>
               <p className="text-stone-600 dark:text-stone-400">
@@ -30,7 +34,11 @@ const ContactPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-xl bg-gray-200 dark:bg-stone-800">
-            <Phone size={24} className="text-stone-600 dark:text-stone-400" />
+            <Phone
+              size={24}
+              className="text-stone-600 dark:text-stone-400"
+              aria-hidden="true"
+            />
             <div>
               <h3 className="font-semibold text-lg">Call Us</h3>
               <p className="text-stone-600 dark:text-stone-400">
@@ -39,7 +47,11 @@ const ContactPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-4 p-6 rounded-xl bg-gray-200 dark:bg-stone-800">
-            <MapPin size={24} className="text-stone-600 dark:text-stone-400" />
+            <MapPin
+              size={24}
+              className="text-stone-600 dark:text-stone-400"
+              aria-hidden="true"
+            />
             <div>
               <h3 className="font-semibold text-lg">Visit Us</h3>
               <p className="text-stone-600 dark:text-stone-400">

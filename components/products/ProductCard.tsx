@@ -107,17 +107,17 @@ const ProductCard = ({ product }: { product: Product }) => {
   };
 
   return (
-    <div
+    <article
       key={product.id}
-      className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col max-w-75"
+      className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col max-w-62.5 m-auto"
     >
       {/* Badges: Out of Sotck or Discount */}
       {isGlobalOutOfStock ? (
-        <span className="absolute z-10 top-3 left-3 bg-stone-900 text-gray-100 dark:bg-gray-100 dark:text-stone-900 px-2 py-1 text-xs rounded font-medium shadow-md">
+        <span className="absolute z-5 top-3 left-3 bg-stone-900 text-gray-100 dark:bg-gray-100 dark:text-stone-900 px-2 py-1 text-xs rounded font-medium shadow-md">
           Out of Stock
         </span>
       ) : maxDiscount > 0 ? (
-        <span className="absolute z-10 top-3 right-3 bg-red-500 text-white px-2 py-1 text-xs rounded shadow-md">
+        <span className="absolute z-5 top-3 right-3 bg-red-500 text-white px-2 py-1 text-xs rounded shadow-md">
           -{maxDiscount}%
         </span>
       ) : null}
@@ -129,8 +129,8 @@ const ProductCard = ({ product }: { product: Product }) => {
           <Image
             src={product.images[0]}
             alt={product.title}
-            width={1000}
-            height={1000}
+            width={500}
+            height={500}
             className={`aspect-square object-cover hover:scale-105 transition-all duration-300 ease-in-out ${isGlobalOutOfStock ? "brightness-30" : ""}`}
           />
         </Link>
@@ -160,14 +160,17 @@ const ProductCard = ({ product }: { product: Product }) => {
           </span>
         </div>
       ) : (
-        <div className="flex items-center gap-4 text-xs mt-2">
+        <div className="flex flex-col gap-4 text-xs mt-2">
           {/* Sizes */}
           <div className="flex flex-col gap-1">
             <span>Size</span>
+            <label htmlFor={`${product.slug}-size`} className="sr-only">
+              Size
+            </label>
             <select
               value={selectedSize}
               id={`${product.slug}-size`}
-              className="ring-1 ring-gray-300 rounded-md px-2 py-1 bg-transparent dark:bg-stone-700 text-stone-900 dark:text-white cursor-pointer"
+              className="ring-1 w-1/2 ring-gray-300 rounded-md px-2 py-1 bg-transparent dark:bg-stone-700 text-stone-900 dark:text-white cursor-pointer"
               onChange={(e) => setSelectedSize(e.target.value)}
             >
               <option value="">- Sizes -</option>
@@ -190,7 +193,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           {/* Colors Selection */}
           <div className="flex flex-col gap-1">
             <span>Color</span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {colors.map((color) => {
                 const disabled = !availableColors.includes(color);
                 const isSelected = selectedColor === color;
@@ -201,6 +204,8 @@ const ProductCard = ({ product }: { product: Product }) => {
                     key={color}
                     disabled={disabled}
                     onClick={() => setSelectedColor(isSelected ? "" : color)}
+                    aria-label={`Select color ${color}`}
+                    aria-pressed={isSelected}
                     className={`border p-0.5 transition-all ${
                       isSelected
                         ? "border-stone-900 dark:border-white scale-110"
@@ -235,7 +240,7 @@ const ProductCard = ({ product }: { product: Product }) => {
       >
         {isGlobalOutOfStock || isArchived ? "Out of stock" : "Add to cart"}
       </button>
-    </div>
+    </article>
   );
 };
 

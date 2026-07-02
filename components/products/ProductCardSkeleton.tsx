@@ -1,6 +1,9 @@
 const ProductCardSkeleton = () => {
   return (
-    <div className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col motion-safe:animate-pulse">
+    <div
+      aria-hidden="true"
+      className="relative bg-gray-200 dark:bg-stone-800 p-2 rounded-lg flex flex-col motion-safe:animate-pulse"
+    >
       <div className="w-full aspect-square bg-gray-300 dark:bg-stone-700 rounded-lg" />
       <div className="h-6 bg-gray-300 dark:bg-stone-700 rounded mt-2 w-3/4" />
       <div className="h-5 bg-gray-300 dark:bg-stone-700 rounded mt-1 w-1/2" />
