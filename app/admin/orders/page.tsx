@@ -82,7 +82,11 @@ export default function AdminOrdersPage() {
 
   if (isInitialLoad) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div
+        className="flex min-h-screen items-center justify-center"
+        aria-busy="true"
+        aria-live="polite"
+      >
         <span className="text-stone-500 animate-pulse">Loading orders...</span>
       </div>
     );
@@ -90,7 +94,7 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <header className="border-b border-gray-200 pb-5">
+      <header className="border-b border-gray-200 dark:border-stone-800 pb-5">
         <h2 className="text-xl sm:text-2xl font-semibold">Orders Management</h2>
         <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Track incoming packages, authorize refunds, and manage order
@@ -105,7 +109,10 @@ export default function AdminOrdersPage() {
       />
 
       {error && (
-        <div className="p-4 bg-red-50 text-red-600 rounded-lg mt-4 border border-red-100">
+        <div
+          role="alert"
+          className="p-4 bg-red-50 text-red-600 rounded-lg mt-4 border border-red-100"
+        >
           <p>{error}</p>
           <button
             onClick={fetchOrders}

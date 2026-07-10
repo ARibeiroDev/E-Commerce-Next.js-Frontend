@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getAuditLogs, type AuditLog } from "@/lib/api/auditLog";
@@ -31,29 +31,29 @@ const AdminAuditsPage = () => {
     }
   }, [user, router]);
 
-  useEffect(() => {
-    async function fetchLogs() {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await getAuditLogs({ page, limit });
-        setLogs(response.data);
-        setMeta(response.meta);
-      } catch (err: unknown) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to load audit repositories.",
-        );
-      } finally {
-        setLoading(false);
-      }
-    }
+  const fetchLogs = useCallback(async () => {
+    if (user?.role !== "SUPERADMIN") return;
 
-    if (user?.role === "SUPERADMIN") {
-      fetchLogs();
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getAuditLogs({ page, limit });
+      setLogs(response.data);
+      setMeta(response.meta);
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load audit repositories.",
+      );
+    } finally {
+      setLoading(false);
     }
   }, [page, limit, user]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   const handleFilterChange = (
     key: string,
@@ -85,7 +85,7 @@ const AdminAuditsPage = () => {
 
   return (
     <>
-      <header className="border-b border-gray-200 pb-5">
+      <header className="border-b border-gray-200 dark:border-stone-800 pb-5">
         <h2 className="text-xl sm:text-2xl font-semibold">
           System Audits Logs
         </h2>
@@ -96,13 +96,20 @@ const AdminAuditsPage = () => {
       </header>
 
       {error && (
-        <p className="p-4 rounded-md bg-red-50 border border-red-200 text-sm text-red-700 mb-6">
+        <p
+          role="alert"
+          className="p-4 rounded-md bg-red-50 border border-red-200 text-sm text-red-700 mb-6"
+        >
           {error}
         </p>
       )}
 
       {loading ? (
-        <div className="flex min-h-screen items-center justify-center">
+        <div
+          aria-busy="true"
+          aria-live="polite"
+          className="flex min-h-screen items-center justify-center"
+        >
           <span className="text-stone-500 animate-pulse">
             Loading audits...
           </span>
@@ -119,7 +126,6 @@ const AdminAuditsPage = () => {
         </>
       )}
 
-      {/* Pagination Controls */}
       {meta && logs.length > 0 && (
         <Pagination
           currentPage={meta.currentPage}

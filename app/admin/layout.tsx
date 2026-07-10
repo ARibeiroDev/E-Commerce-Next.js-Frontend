@@ -10,8 +10,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const user = useAuthStore((state) => state.user);
   const pathname = usePathname();
 
-  const linkClass = (path: string) =>
-    `px-3 py-2 rounded-md md:rounded-r-none text-sm font-medium transition-colors ${pathname.startsWith(path) ? "bg-stone-800 text-gray-200 dark:bg-gray-300 dark:text-stone-900 font-semibold" : "hover:bg-gray-200 dark:hover:bg-stone-700"}`;
+  const linkClass = (isActive: boolean) =>
+    `px-3 py-2 rounded-md md:rounded-r-none text-sm font-medium transition-colors ${isActive ? "bg-stone-800 text-gray-200 dark:bg-gray-300 dark:text-stone-900 font-semibold" : "hover:bg-gray-200 dark:hover:bg-stone-700"}`;
+
+  const navItems = [
+    {
+      href: "/admin/products",
+      label: "Products",
+    },
+    {
+      href: "/admin/users",
+      label: "Users",
+    },
+    {
+      href: "/admin/orders",
+      label: "Orders",
+    },
+  ];
 
   return (
     <AdminGuard>
@@ -22,29 +37,42 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               Admin Console
             </h2>
           </Link>
-          <nav className="flex items-center justify-evenly md:flex-col  md:items-end gap-0.5 mt-6">
-            <Link
-              href="/admin/products"
-              className={linkClass("/admin/products")}
-            >
-              Products
-            </Link>
-            <Link href="/admin/users" className={linkClass("/admin/users")}>
-              Users
-            </Link>
-            <Link href="/admin/orders" className={linkClass("/admin/orders")}>
-              Orders
-            </Link>
+          <nav
+            className="flex items-center justify-evenly md:flex-col  md:items-end gap-0.5 mt-6"
+            aria-label="Admin Navigation"
+          >
+            {navItems.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={linkClass(isActive)}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
 
             {user?.role === "SUPERADMIN" && (
-              <Link href="/admin/audits" className={linkClass("/admin/audits")}>
+              <Link
+                href="/admin/audits"
+                className={linkClass(pathname.startsWith("/admin/audits"))}
+                aria-current={
+                  pathname.startsWith("/admin/audits") ? "page" : undefined
+                }
+              >
                 Audits
               </Link>
             )}
           </nav>
         </aside>
 
-        <section className="flex gap-6 flex-col h-full py-4 flex-1 md:w-9/12 px-[5vw] lg:px-[7vw] animate-appear">
+        <section
+          className="flex gap-6 flex-col h-full py-4 flex-1 md:w-9/12 px-[5vw] lg:px-[7vw] animate-appear min-h-[75vh]"
+          aria-label="Dashboard Workspace"
+        >
           {children}
         </section>
       </main>

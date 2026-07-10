@@ -17,20 +17,19 @@ export default function MobileAdminOrders({
       {orders.map((order) => (
         <article
           key={order.id}
-          onClick={() => onSelectOrder(order)}
-          className="bg-white dark:bg-stone-800 p-4 rounded-2xl border border-gray-200 dark:border-stone-700 shadow-sm cursor-pointer transition-colors"
+          className="relative bg-white dark:bg-stone-800 p-4 rounded-2xl border border-gray-200 dark:border-stone-700 shadow-sm transition-colors"
         >
           <header className="flex justify-between items-start mb-3 gap-2">
             <div className="min-w-0">
-              <h3 className="font-medium  truncate">{order.shippingName}</h3>
-              <p className="text-xs  font-mono mt-0.5 break-all line-clamp-1">
+              <h3 className="font-medium truncate">{order.shippingName}</h3>
+              <p className="text-xs font-mono mt-0.5 break-all line-clamp-1">
                 {order.id}
               </p>
             </div>
             <span
               className={`shrink-0 px-2.5 py-1 text-[10px] sm:text-xs font-semibold rounded-full ${getStatusStyle(order.status)}`}
             >
-              {order.status}
+              {order.status.replace("_", " ")}
             </span>
           </header>
 
@@ -41,9 +40,13 @@ export default function MobileAdminOrders({
               </p>
               <p className="font-semibold">${Number(order.total).toFixed(2)}</p>
             </div>
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+            <button
+              onClick={() => onSelectOrder(order)}
+              className="text-sm text-blue-600 dark:text-blue-400 font-bold outline-none cursor-pointer before:absolute before:inset-0 before:z-0"
+              aria-label={`View details for order ${order.id}`}
+            >
               View Details
-            </p>
+            </button>
           </section>
         </article>
       ))}

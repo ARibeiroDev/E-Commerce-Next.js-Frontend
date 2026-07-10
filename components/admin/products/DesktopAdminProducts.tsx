@@ -2,7 +2,7 @@ import { PaginatedResponse } from "@/types/pagination";
 import { Product } from "@/types/product";
 import { ArchiveRestore, Pen, Trash } from "lucide-react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export type AdminProductsProps = {
   data: PaginatedResponse<Product[]>;
@@ -17,18 +17,26 @@ const DesktopAdminProducts = ({
   handleRestore,
   archivedView,
 }: AdminProductsProps) => {
-  const router = useRouter();
-
   return (
     <section className="hidden xl:block bg-white dark:bg-stone-800 border border-gray-200 dark:border-stone-700 rounded-lg overflow-hidden shadow-sm">
       <table className="w-full text-left text-sm whitespace-nowrap">
         <thead className="bg-gray-50 dark:bg-stone-900 border-b border-gray-200 dark:border-stone-700 text-stone-600 dark:text-stone-300">
           <tr>
-            <th className="px-6 py-4 font-semibold">Product</th>
-            <th className="px-6 py-4 font-semibold">Category</th>
-            <th className="px-6 py-4 font-semibold">Price</th>
-            <th className="px-6 py-4 font-semibold">Variants</th>
-            <th className="px-6 py-4 font-semibold text-right">Actions</th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Product
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Category
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Price
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Variants
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold text-right">
+              Actions
+            </th>
           </tr>
         </thead>
 
@@ -36,8 +44,7 @@ const DesktopAdminProducts = ({
           {data.data.map((p) => (
             <tr
               key={p.id}
-              onClick={() => router.push(`/admin/products/${p.slug}`)}
-              className="hover:bg-gray-50 dark:hover:bg-stone-800/80 transition-colors cursor-pointer group"
+              className="hover:bg-gray-50 dark:hover:bg-stone-800/80 transition-colors group"
             >
               <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
@@ -50,7 +57,12 @@ const DesktopAdminProducts = ({
                       className="object-cover rounded bg-gray-100 dark:bg-stone-700 border border-gray-200 dark:border-stone-600"
                     />
                   </figure>
-                  <span className="font-bold truncate max-w-xs">{p.title}</span>
+                  <Link
+                    className="font-bold truncate max-w-xs"
+                    href={`/admin/products/${p.slug}`}
+                  >
+                    {p.title}
+                  </Link>
                 </div>
               </td>
               <td className="px-6 py-4 text-stone-600 dark:text-stone-400">
@@ -71,26 +83,27 @@ const DesktopAdminProducts = ({
                   className="flex justify-end items-center gap-3"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
-                    onClick={() => router.push(`/admin/products/${p.slug}`)}
-                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
+                  <Link
+                    href={`/admin/products/${p.slug}`}
+                    className="text-blue-600 dark:text-blue-400 font-medium hover:underline flex items-center gap-1"
+                    aria-label={`Edit ${p.title}`}
                   >
-                    <Pen size={16} />
+                    <Pen size={16} aria-hidden="true" />
                     Edit
-                  </button>
+                  </Link>
                   {archivedView ? (
                     <button
                       onClick={() => handleRestore?.(p.slug)}
                       className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <ArchiveRestore size={16} /> Restore
+                      <ArchiveRestore size={16} aria-hidden="true" /> Restore
                     </button>
                   ) : (
                     <button
                       onClick={() => handleDelete(p.slug)}
                       className="text-red-600 dark:text-red-400 font-medium hover:underline flex items-center gap-1 cursor-pointer"
                     >
-                      <Trash size={16} /> Delete
+                      <Trash size={16} aria-hidden="true" /> Delete
                     </button>
                   )}
                 </div>

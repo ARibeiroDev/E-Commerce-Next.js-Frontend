@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useId } from "react";
 import { getUsers, deleteUser, UserQuery } from "@/lib/api/users";
 import { PrivateUserDto } from "@/types/user";
 import { useAuthStore } from "@/stores/authStore";
 import MobileAdminUsers from "@/components/admin/users/MobileAdminUsers";
 import DesktopAdminUsers from "@/components/admin/users/DesktopAdminUsers";
-import { Search } from "lucide-react";
+import { RefreshCw, Search } from "lucide-react";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { PaginatedResponse } from "@/types/pagination";
 import Pagination from "@/components/ui/Pagination";
@@ -18,6 +18,7 @@ export default function AdminUsersPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchInputId = useId(); // React hook for generating unique IDs that can be used for accessibility
 
   const page = Number(searchParams.get("page") ?? 1);
   const limit = Number(searchParams.get("limit") ?? 8);
@@ -95,8 +96,13 @@ export default function AdminUsersPage() {
   }, [handleParamChange, localSearch, searchQuery]);
 
   const handleDeactivate = async (id: string, username: string) => {
-    if (!confirm(`Are you sure you want to deactivate ${username}'s account?`))
-      return;
+    if (!id || !username) return;
+
+    const isConfirmed = window.confirm(
+      `CRITICAL ACTION: Are you sure you want to deactivate ${username}'s access permissions?`,
+    );
+    if (!isConfirmed) return;
+
     try {
       await deleteUser(id);
       setUsers((prev) => {
@@ -117,75 +123,105 @@ export default function AdminUsersPage() {
 
   return (
     <>
-      <header className="flex flex-col gap-4 mt-4 mb-6">
+      <header className="flex flex-col gap-4 mt-4 pb-4 border-b border-stone-200 dark:border-stone-800">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h2 className="text-xl sm:text-2xl font-semibold">User Management</h2>
           <button
             onClick={fetchUsers}
-            className="text-sm px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-stone-800 transition-colors w-fit"
+            disabled={loading}
+            className="inline-flex items-center gap-2 text-sm px-4 py-2 border rounded-md bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-300 hover:bg-gray-50 dark:hover:bg-stone-800 disabled:opacity-50 transition-colors w-fit shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-500 cursor-pointer"
+            aria-label="Refresh users database registry"
           >
+            <RefreshCw
+              className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
+              aria-hidden="true"
+            />
             Refresh List
           </button>
         </div>
 
-        <section className="flex flex-col xl:flex-row gap-4 justify-between bg-gray-100 dark:bg-stone-800 p-3 rounded-lg border border-gray-200 dark:border-stone-700">
-          <div className="relative w-full xl:w-96">
-            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-stone-500 dark:text-stone-400" />
-            <input
-              type="text"
-              id="search"
-              placeholder="Search by ID, username, or email..."
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-md bg-white dark:bg-stone-900 border border-gray-300 dark:border-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-500 text-sm"
-            />
-          </div>
-
-          <div className="flex items-center flex-wrap gap-2 pb-1 xl:pb-0">
-            {(["ALL", "BANNED", "UNVERIFIED"] as FilterType[]).map((tab) => (
-              <button
-                key={tab}
-                onClick={() =>
-                  handleParamChange("filter", tab === "ALL" ? "" : tab)
-                }
-                className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer ${
-                  activeFilter === tab
-                    ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-black"
-                    : "bg-white dark:bg-stone-900 text-stone-600 dark:text-gray-300 border border-gray-300 dark:border-stone-600 hover:bg-gray-50 dark:hover:bg-stone-700"
-                }`}
-              >
-                {tab === "ALL" && "All Users"}
-                {tab === "BANNED" && "Banned / Inactive"}
-                {tab === "UNVERIFIED" && "Awaiting Verification"}
-              </button>
-            ))}
-          </div>
-        </section>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          Review credentials, balance verification flows, and monitor security
+          operational states.
+        </p>
       </header>
+
+      <section
+        className="flex flex-col xl:flex-row gap-4 justify-between bg-gray-100 dark:bg-stone-800 p-3 rounded-lg border border-gray-200 dark:border-stone-700"
+        aria-label="Search and filter controls"
+      >
+        <div className="relative w-full xl:w-96">
+          <label htmlFor={searchInputId} className="sr-only">
+            Search users database by ID, username or email
+          </label>
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-stone-500 dark:text-stone-400" />
+          <input
+            type="text"
+            id={searchInputId}
+            placeholder="Search by ID, username, or email..."
+            value={localSearch}
+            onChange={(e) => setLocalSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 rounded-md bg-white dark:bg-stone-900 border border-gray-300 dark:border-stone-600 focus:outline-none focus:ring-2 focus:ring-stone-500 text-sm"
+          />
+        </div>
+
+        <nav className="flex items-center flex-wrap gap-2">
+          {(["ALL", "BANNED", "UNVERIFIED"] as FilterType[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() =>
+                handleParamChange("filter", tab === "ALL" ? "" : tab)
+              }
+              className={`px-4 py-2 text-sm font-medium rounded-md whitespace-nowrap transition-colors cursor-pointer ${
+                activeFilter === tab
+                  ? "bg-stone-900 text-white dark:bg-gray-100 dark:text-black"
+                  : "bg-white dark:bg-stone-900 text-stone-600 dark:text-gray-300 border border-gray-300 dark:border-stone-600 hover:bg-gray-50 dark:hover:bg-stone-700"
+              }`}
+            >
+              {tab === "ALL" && "All Users"}
+              {tab === "BANNED" && "Banned / Inactive"}
+              {tab === "UNVERIFIED" && "Awaiting Verification"}
+            </button>
+          ))}
+        </nav>
+      </section>
 
       {/* Inline state checks keep the data tables fluid and reactive without full layout flashes */}
       {loading ? (
-        <div className="flex min-h-screen items-center justify-center">
-          <span className="text-stone-500 animate-pulse">
-            Loading users database...
-          </span>
-        </div>
+        <section
+          className="flex min-h-100 flex-1 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-stone-800"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex flex-col items-center gap-3">
+            <RefreshCw
+              className="w-6 h-6 text-stone-400 animate-spin"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium text-stone-500 dark:text-stone-400 animate-pulse">
+              Loading users...
+            </span>
+          </div>
+        </section>
       ) : error ? (
-        <div className="p-4 bg-red-100 text-red-600 rounded-md mt-4">
+        <section
+          role="alert"
+          className="p-4 bg-red-100 text-red-600 rounded-md mt-4"
+        >
           <p className="font-semibold">Error</p>
           <p>{error}</p>
           <button onClick={fetchUsers} className="mt-2 underline">
             Retry
           </button>
-        </div>
+        </section>
       ) : (
         <>
           {usersList.length === 0 && (
-            <div className="flex flex-col items-center justify-center p-12 bg-gray-50 dark:bg-stone-800/50 rounded-lg border border-dashed border-gray-300 dark:border-stone-700">
+            <article className="flex flex-col items-center justify-center p-12 bg-gray-50 dark:bg-stone-800/50 rounded-lg border border-dashed border-gray-300 dark:border-stone-700">
               <p className="text-stone-500 font-medium">
                 No users found matching your criteria.
               </p>
-            </div>
+            </article>
           )}
 
           <MobileAdminUsers

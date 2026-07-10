@@ -10,13 +10,24 @@ const DesktopAdminUsers = ({
 }: AdminUsersProps) => {
   return (
     <div className="hidden xl:block bg-white dark:bg-stone-800 border border-gray-200 dark:border-stone-700 rounded-lg overflow-hidden shadow-sm">
-      <table className="w-full text-left text-sm whitespace-nowrap">
+      <table
+        className="w-full text-left text-sm whitespace-nowrap"
+        aria-label="System users table"
+      >
         <thead className="bg-gray-50 dark:bg-stone-900 border-b border-gray-200 dark:border-stone-700 text-stone-600 dark:text-stone-300">
           <tr>
-            <th className="px-6 py-4 font-semibold">User</th>
-            <th className="px-6 py-4 font-semibold">Role</th>
-            <th className="px-6 py-4 font-semibold">Status</th>
-            <th className="px-6 py-4 font-semibold text-right">Actions</th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              User
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Role
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold">
+              Status
+            </th>
+            <th scope="col" className="px-6 py-4 font-semibold text-right">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-stone-700">

@@ -14,7 +14,10 @@ const MobileAdminUsers = ({
   handleDeactivate,
 }: AdminUsersProps) => {
   return (
-    <section className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:hidden">
+    <section
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 xl:hidden"
+      aria-label="User Profile Cards"
+    >
       {filteredUsers.map((u) => {
         const isMe = currentUser?.id === u.id;
         const canDelete =
@@ -28,7 +31,7 @@ const MobileAdminUsers = ({
           >
             <div className="flex justify-between items-start">
               <div className="flex flex-col">
-                <span className="font-bold text-lg">{u.username}</span>
+                <h3 className="font-bold text-lg">{u.username}</h3>
 
                 <span className="text-[10px] text-stone-400 font-mono mt-1">
                   ID: {u.id.split("-")[0]}...

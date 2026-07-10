@@ -23,6 +23,10 @@ interface ProductFormProps {
   initialData?: Product; // If provided, form is in Edit Mode
 }
 
+// Extracted constant to prevent recreation on every render
+const INPUT_STYLES =
+  "border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400 rounded-md w-full bg-white dark:bg-stone-900 dark:border-stone-700";
+
 export default function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const isEditing = !!initialData;
@@ -163,16 +167,13 @@ export default function ProductForm({ initialData }: ProductFormProps) {
         reset();
       }
 
-      router.push("/admin/products");
+      setTimeout(() => router.push("/admin/products"), 1500);
     } catch (error: unknown) {
       setError("root", {
         message: error instanceof Error ? error.message : "An error occurred",
       });
     }
   };
-
-  const inputStyles =
-    "border border-gray-300 p-2 outline-0 text-sm focus:border-gray-400 rounded-md w-full bg-white dark:bg-stone-900 dark:border-stone-700";
 
   return (
     <form
@@ -181,14 +182,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     >
       {/* Basic Info Section */}
       <fieldset className="space-y-4">
-        <legend className="flex justify-between w-full items-center">
-          <h4 className="text-lg font-semibold">Basic Information</h4>
+        <div className="flex justify-between w-full items-center">
+          <legend className="text-lg font-semibold">Basic Information</legend>
           {isEditing && (
             <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
               Edit Mode
             </span>
           )}
-        </legend>
+        </div>
 
         <div>
           <label className="text-sm font-medium" htmlFor="title">
@@ -199,10 +200,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             id="title"
             {...register("title")}
             placeholder="Product Title"
-            className={inputStyles}
+            className={INPUT_STYLES}
+            aria-invalid={!!errors.title}
+            aria-describedby="title-error"
           />
           {errors.title && (
-            <p className="text-sm text-red-500">{errors.title.message}</p>
+            <p id="title-error" className="text-sm text-red-500">
+              {errors.title.message}
+            </p>
           )}
         </div>
 
@@ -214,10 +219,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             id="description"
             {...register("description")}
             rows={4}
-            className={inputStyles}
+            className={INPUT_STYLES}
+            aria-invalid={!!errors.description}
+            aria-describedby="description-error"
           />
           {errors.description && (
-            <p className="text-sm text-red-500">{errors.description.message}</p>
+            <p id="description-error" className="text-sm text-red-500">
+              {errors.description.message}
+            </p>
           )}
         </div>
 
@@ -228,8 +237,10 @@ export default function ProductForm({ initialData }: ProductFormProps) {
             </label>
             <select
               {...register("categoryId")}
-              className={inputStyles}
+              className={INPUT_STYLES}
               id="category"
+              aria-invalid={!!errors.categoryId}
+              aria-describedby="category-error"
             >
               <option value="">--Select a Category--</option>
               {categories.map((cat) => (
@@ -239,7 +250,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               ))}
             </select>
             {errors.categoryId && (
-              <p className="text-sm text-red-500">
+              <p id="category-error" className="text-sm text-red-500">
                 {errors.categoryId.message}
               </p>
             )}
@@ -254,10 +265,14 @@ export default function ProductForm({ initialData }: ProductFormProps) {
               type="number"
               step="0.01"
               {...register("basePrice", { valueAsNumber: true })}
-              className={inputStyles}
+              className={INPUT_STYLES}
+              aria-invalid={!!errors.basePrice}
+              aria-describedby="basePrice-error"
             />
             {errors.basePrice && (
-              <p className="text-sm text-red-500">{errors.basePrice.message}</p>
+              <p id="basePrice-error" className="text-sm text-red-500">
+                {errors.basePrice.message}
+              </p>
             )}
           </div>
 
@@ -295,7 +310,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           </label>
           <input
             {...register("tags")}
-            className={inputStyles}
+            className={INPUT_STYLES}
             id="tags"
             type="text"
           />
@@ -310,7 +325,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
           </label>
           <input
             {...register("images")}
-            className={inputStyles}
+            className={INPUT_STYLES}
             id="images"
             type="text"
           />
@@ -358,6 +373,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   type="button"
                   onClick={() => handleRemoveVariant(index)}
                   className="text-red-600 hover:text-red-800 text-sm font-medium cursor-pointer"
+                  aria-label={`Remove Variant ${index + 1}`}
                 >
                   Remove
                 </button>
@@ -370,7 +386,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   type="text"
                   {...register(`variants.${index}.color`)}
                   placeholder="Color"
-                  className={inputStyles}
+                  className={INPUT_STYLES}
                 />
                 {errors.variants?.[index]?.color && (
                   <p className="text-sm text-red-500">
@@ -383,7 +399,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   type="text"
                   {...register(`variants.${index}.size`)}
                   placeholder="Size"
-                  className={inputStyles}
+                  className={INPUT_STYLES}
                 />
                 {errors.variants?.[index]?.size && (
                   <p className="text-sm text-red-500">
@@ -398,7 +414,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                     valueAsNumber: true,
                   })}
                   placeholder="Stock"
-                  className={inputStyles}
+                  className={INPUT_STYLES}
                 />
                 {errors.variants?.[index]?.stock && (
                   <p className="text-sm text-red-500">
@@ -413,7 +429,7 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                     valueAsNumber: true,
                   })}
                   placeholder="Discount (%)"
-                  className={inputStyles}
+                  className={INPUT_STYLES}
                 />
                 {errors.variants?.[index]?.discountPercentage && (
                   <p className="text-sm text-red-500">
@@ -428,12 +444,18 @@ export default function ProductForm({ initialData }: ProductFormProps) {
 
       {/* Status & Submit */}
       {errors.root && (
-        <p className="text-sm text-red-500 text-center font-medium">
+        <p
+          role="alert"
+          className="text-sm text-red-500 text-center font-medium"
+        >
           {errors.root.message}
         </p>
       )}
       {success && (
-        <p className="text-sm text-green-600 text-center font-medium">
+        <p
+          role="alert"
+          className="text-sm text-green-600 text-center font-medium"
+        >
           {success}
         </p>
       )}

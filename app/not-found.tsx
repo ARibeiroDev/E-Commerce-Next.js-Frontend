@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import { Frown } from "lucide-react";
 import Link from "next/link";
 
@@ -10,7 +9,7 @@ export default function NotFound() {
         <h2 className="text-3xl">Oops, this is embarrassing...</h2>
       </div>
 
-      <p>The page you're looking for couldn't be found!</p>
+      <p>The page you&apos;re looking for couldn&apos;t be found!</p>
       <Link href="/" className="text-blue-400 text-lg">
         Return Home
       </Link>

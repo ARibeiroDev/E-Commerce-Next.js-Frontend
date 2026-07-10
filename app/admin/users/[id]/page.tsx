@@ -44,34 +44,37 @@ export default function AdminEditUserPage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center w-full px-4">
+      <section className="flex min-h-100 items-center justify-center w-full px-4">
         <div className="flex flex-col items-center gap-2 text-stone-500">
           <Loading />
           <span className="text-sm font-medium animate-pulse">
             Fetching user data...
           </span>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
     <>
-      <section className="py-2 border-b border-gray-200 dark:border-stone-800">
+      <nav
+        aria-label="Breadcrumb"
+        className="py-2 border-b border-gray-200 dark:border-stone-800"
+      >
         <Link
           href="/admin/users"
           className="inline-flex items-center gap-2 text-sm hover:text-stone-500 transition-colors group"
         >
-          <ArrowLeftIcon size={20} />
+          <ArrowLeftIcon size={20} aria-hidden="true" />
           Back to User Directory
         </Link>
-      </section>
+      </nav>
 
       <header className="mb-4">
-        <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Modify User Settings
-        </h3>
-        <p className="mt-2 text-sm text-stone-500 dark:text-gray-400">
+        </h2>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
           Update administrative authorization controls and system operational
           bans.
         </p>
@@ -85,47 +88,47 @@ export default function AdminEditUserPage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
           {/* Identity Metadata Card */}
           <section className="bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 rounded-xl p-5 sm:p-6">
-            <h4 className="text-md font-bold uppercase tracking-wider text-stone-400 mb-4">
+            <h3 className="text-md font-bold uppercase tracking-wider text-stone-400 mb-4">
               Identity Metadata
-            </h4>
-            <article className="space-y-4">
+            </h3>
+            <dl className="space-y-4">
               <div>
-                <span className="block text-xs font-medium text-stone-500 uppercase">
+                <dt className="block text-xs font-medium text-stone-500 uppercase">
                   Username
-                </span>
-                <span className="text-base font-semibold break-all">
+                </dt>
+                <dd className="text-base font-semibold break-all">
                   {targetUser.username}
-                </span>
+                </dd>
               </div>
               <div>
-                <span className="block text-xs font-medium text-stone-500 uppercase">
+                <dt className="block text-xs font-medium text-stone-500 uppercase">
                   Email Address
-                </span>
-                <span className="text-base font-medium break-all">
+                </dt>
+                <dd className="text-base font-medium break-all">
                   {targetUser.email}
-                </span>
+                </dd>
               </div>
               <div>
-                <span className="block text-xs font-medium text-stone-500 uppercase">
+                <dt className="block text-xs font-medium text-stone-500 uppercase">
                   System ID
-                </span>
-                <span className="text-xs font-mono bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded block mt-1 break-all">
+                </dt>
+                <dd className="text-xs font-mono bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded block mt-1 break-all">
                   {targetUser.id}
-                </span>
+                </dd>
               </div>
               <div>
-                <span className="block text-xs font-medium text-stone-500 uppercase mb-1">
+                <dt className="block text-xs font-medium text-stone-500 uppercase mb-1">
                   Status
-                </span>
-                <span
+                </dt>
+                <dd
                   className={`inline-flex items-center text-xs font-semibold ${targetUser.isVerified ? "text-emerald-600" : "text-amber-500"}`}
                 >
                   {targetUser.isVerified
                     ? "Verified Safe"
                     : "Pending Verification"}
-                </span>
+                </dd>
               </div>
-            </article>
+            </dl>
           </section>
 
           <section className="xl:col-span-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { adminUpdateUser } from "@/lib/api/users";
 import { useAuthStore } from "@/stores/authStore";
@@ -14,6 +14,7 @@ interface AdminUserFormProps {
 export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
   const router = useRouter();
   const currentUser = useAuthStore((state) => state.user);
+  const roleSelectId = useId();
 
   // Initialize mutable state directly from the fetched user prop
   const [isActive, setIsActive] = useState<boolean>(initialUser.isActive);
@@ -67,12 +68,15 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
     <div className="bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-xl shadow-sm p-5 sm:p-6">
       {/* Form-level Error Handler */}
       {error && (
-        <section className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg text-red-700 dark:text-red-400 text-sm flex items-start gap-3">
+        <section
+          role="alert"
+          className="mb-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-lg text-red-700 dark:text-red-400 text-sm flex items-start gap-3"
+        >
           <CircleX />
           <div>
-            <h4 className="font-semibold text-red-800 dark:text-red-300">
+            <h3 className="font-semibold text-red-800 dark:text-red-300">
               Update Failed
-            </h4>
+            </h3>
             <p className="mt-1">{error}</p>
           </div>
         </section>
@@ -80,7 +84,11 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
 
       {/* Form-level Success Handler */}
       {success && (
-        <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-lg text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-3">
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 rounded-lg text-emerald-700 dark:text-emerald-400 text-sm flex items-center gap-3"
+        >
           <CircleCheck />
           <p className="font-medium">
             User profile successfully updated. Redirecting...
@@ -116,6 +124,8 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
             {/* Switch Toggle Button */}
             <button
               type="button"
+              role="switch"
+              aria-checked={isActive}
               onClick={() => setIsActive(!isActive)}
               disabled={submitting}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-stone-500 focus:ring-offset-2 ${
@@ -146,11 +156,11 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
           </p>
 
           <section className="w-full">
-            <label htmlFor="user-role-select" className="sr-only">
+            <label htmlFor={roleSelectId} className="sr-only">
               Select Authorization Role
             </label>
             <select
-              id="user-role-select"
+              id={roleSelectId}
               value={role}
               onChange={(e) => setRole(e.target.value as Role)}
               disabled={currentUser?.role !== "SUPERADMIN" || submitting}
@@ -177,7 +187,7 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
               setRole(initialUser.role);
             }}
             disabled={!hasChanged || submitting}
-            className="min-w-50 px-4 py-2 text-sm font-medium rounded-md border border-stone-300 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-stone-700 dark:text-stone-300"
+            className="w-full sm:max-w-50 px-4 py-2 text-sm font-medium rounded-md border border-stone-300 dark:border-stone-700 hover:bg-stone-50 dark:hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-stone-700 dark:text-stone-300"
           >
             Reset
           </button>
@@ -185,7 +195,7 @@ export default function AdminUserForm({ initialUser }: AdminUserFormProps) {
           <button
             type="submit"
             disabled={submitting || !hasChanged}
-            className="min-w-50 px-4 py-2 text-sm font-medium rounded-md text-white dark:text-black bg-stone-900 dark:bg-gray-100 hover:bg-stone-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full sm:max-w-50 px-4 py-2 text-sm font-medium rounded-md text-white dark:text-black bg-stone-900 dark:bg-gray-100 hover:bg-stone-800 dark:hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? "Saving..." : "Save"}
           </button>

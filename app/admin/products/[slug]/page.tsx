@@ -16,24 +16,39 @@ export default function EditProductPage() {
   useEffect(() => {
     if (!slug) return;
 
+    let isMounted = true; // Guard against setting state on unmounted components
+
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
       try {
         const data = await getProductBySlug(slug);
-        setProduct(data);
+        if (isMounted) setProduct(data);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load product");
+        if (isMounted) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load product",
+          );
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
+
     fetchProduct();
+
+    return () => {
+      isMounted = false;
+    };
   }, [slug]);
 
   if (loading) {
     return (
-      <div className="p-6 min-h-screen max-w-4xl mx-auto flex justify-center items-center h-64">
+      <div
+        className="p-6 min-h-100 max-w-4xl mx-auto flex justify-center items-center h-64"
+        aria-busy="true"
+        aria-live="polite"
+      >
         <Loading />
         <p className="text-gray-500">Loading product details...</p>
       </div>
@@ -42,7 +57,7 @@ export default function EditProductPage() {
 
   if (error || !product) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div role="alert" className="p-6 max-w-4xl mx-auto">
         <p className="text-red-500 dark:text-stone-900 bg-red-100 dark:bg-red-200 p-4 rounded-md border border-red-200 dark:border-red-300">
           {error || "Product not found"}
         </p>
